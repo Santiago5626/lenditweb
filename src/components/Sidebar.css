@@ -1,0 +1,107 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 240px;
+  height: 100vh;
+  background-color: #03385f;
+  color: #f5f7fa;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.user-info {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  color: #00304D;
+  margin-bottom: 2rem;
+}
+
+.user-info img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+.user-text h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  color: #00304D;
+}
+
+.user-text span {
+  background-color: #00304D;
+  color: #ffffff;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: 1rem;
+  display: inline-block;
+  margin-top: 0.4rem;
+}
+
+.menu {
+  flex-grow: 1;
+}
+
+.menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu ul li {
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #e1e9f0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu ul li a {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.menu ul li:hover,
+.menu ul li.active {
+  background-color: #ffffff;
+  color: #00304D;
+  font-weight: 600;
+}
+
+.menu ul li:hover .material-symbols-outlined,
+.menu ul li.active .material-symbols-outlined {
+  color: #00304D;
+}
+
+.menu ul li .material-symbols-outlined {
+  font-size: 20px;
+  color: #d6dee5;
+  transition: color 0.2s;
+}
+
+.sidebar .menu:last-child {
+  margin-top: auto;
+  border-top: 1px solid #ffffff30;
+  padding-top: 1rem;
+}

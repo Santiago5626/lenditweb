@@ -1,0 +1,18 @@
+.tabla-resumen {
+    /* Bootstrap table classes will be used, so minimal custom styles */
+    /* Keep border-collapse for consistency */
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.tabla-resumen th, .tabla-resumen td {
+    /* Bootstrap table styles will handle padding and borders */
+    border: 1px solid #dee2e6; /* Bootstrap border color */
+    text-align: center;
+}
+
+.tabla-resumen th {
+    background-color: #e2e8f0; /* Light background for header */
+    font-weight: 600;
+}

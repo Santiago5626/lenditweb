@@ -1,0 +1,16 @@
+.tabla-usuarios {
+    /* Bootstrap table classes will be used, so minimal custom styles */
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-usuarios th, .tabla-usuarios td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6; /* Bootstrap border color */
+    text-align: left;
+}
+
+.tabla-usuarios th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+}

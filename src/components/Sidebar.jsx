@@ -15,24 +15,24 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="sidebar">
-      <div>
-        <div className="user-info">
+    <div className="sidebar flex flex-col h-screen bg-[#04395e] text-white p-4">
+      <div className="flex flex-col flex-grow">
+        <div className="user-info mb-6">
           <img src={perfil} alt="Perfil" className="profile-image" />
           <div className="user-text">
             <h3>Sophia Wilson</h3>
             <span>Administrador</span>
           </div>
         </div>
-
+  
         <div className="menu">
-          <ul>
+          <ul className="space-y-2">
             {menuItems.map((item) => (
               <li
                 key={item.name}
-                className={location.pathname === item.path ? 'active' : ''}
+                className={`${location.pathname === item.path ? 'active' : ''}`}
               >
-                <Link to={item.path}>
+                <Link to={item.path} className="flex items-center gap-2">
                   <span className="material-symbols-outlined">{item.icon}</span>
                   {item.name}
                 </Link>
@@ -41,17 +41,17 @@ const Sidebar = () => {
           </ul>
         </div>
       </div>
-
+  
       <div className="menu bottom-menu">
         <ul>
           <li>
-            <Link to="/configuracion">
+            <Link to="/configuracion" className="flex items-center gap-2">
               <span className="material-symbols-outlined">manufacturing</span>
               Configuración
             </Link>
           </li>
           <li>
-            <a href="index.html">
+            <a href="index.html" className="flex items-center gap-2">
               <span className="material-symbols-outlined">logout</span>
               Cerrar sesión
             </a>
@@ -60,6 +60,7 @@ const Sidebar = () => {
       </div>
     </div>
   );
+
 };
 
 export default Sidebar;

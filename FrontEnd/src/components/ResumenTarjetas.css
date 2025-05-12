@@ -1,0 +1,19 @@
+.container .row {
+    margin: 0;
+    width: 100%;
+}
+
+.card {
+    margin-bottom: 0.5rem;
+}
+
+.card p {
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.bg-primary {
+    width: 40px !important;
+    height: 40px !important;
+    margin-right: 10px !important;
+}

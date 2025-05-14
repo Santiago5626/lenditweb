@@ -1,4 +1,5 @@
 import "./App.css";
+import "./styles/layout.css";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,6 +11,7 @@ import Inicio from "./pages/inicio";
 import Reportes from "./pages/Reportes";
 import Inventario from "./pages/Inventario";
 import Circulacion from "./pages/Circulacion";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -17,10 +19,38 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/inicio" element={<Inicio />} />
-        <Route path="/Circulacion" element={<Circulacion />} />
-        <Route path="/Reportes" element={<Reportes />} />
-        <Route path="/inventario" element={<Inventario />} />
+        <Route
+          path="/inicio"
+          element={
+            <ProtectedRoute>
+              <Inicio />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Circulacion"
+          element={
+            <ProtectedRoute>
+              <Circulacion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Reportes"
+          element={
+            <ProtectedRoute>
+              <Reportes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventario"
+          element={
+            <ProtectedRoute>
+              <Inventario />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

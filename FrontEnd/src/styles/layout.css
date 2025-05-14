@@ -1,0 +1,22 @@
+/* Estilos comunes para el diseño de la página */
+.page-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 240px; /* Coincide con el ancho del sidebar */
+  padding: 20px;
+  flex-grow: 1;
+  width: calc(100% - 240px); /* Asegura que el contenido respete el espacio del sidebar */
+}
+
+/* Estilos para contenedores flexibles dentro del contenido principal */
+.content-flex {
+  display: flex;
+  gap: 20px;
+}
+
+.content-flex-item {
+  flex: 1;
+}

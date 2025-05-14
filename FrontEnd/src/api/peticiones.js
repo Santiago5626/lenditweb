@@ -1,90 +1,299 @@
-export async function fetchSolicitantes(url) {
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+// Función auxiliar para obtener el token
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+};
+
+export async function fetchSolicitantes() {
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    console.log('Intentando obtener solicitantes...');
+    const response = await fetch(`${API_BASE_URL}/solicitantes/obtener`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    console.log('Respuesta del servidor:', response.status);
 
     if (!response.ok) {
-      throw new Error("No se pudieron obtener los datos");
+      if (response.status === 401) {
+        // Si no está autorizado, redirigir al login
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Error al obtener los datos");
     }
 
-    return data;
+    const data = await response.json();
+    console.log('Datos recibidos:', data);
+
+    // Si no hay datos, devolver array vacío
+    if (!data) return [];
+
+    // Si la respuesta es un objeto con mensaje de error
+    if (data.detail) {
+      throw new Error(data.detail);
+    }
+
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error al obtener los datos:", error);
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 }
 
-export async function agregar(cc, nombre, apellido, email) {
+export async function agregar(solicitanteData) {
   try {
+    console.log('Datos a enviar:', solicitanteData);
     const response = await fetch(
-      "http://127.0.0.1:8000/estudiantes/registrar",
+      `${API_BASE_URL}/solicitantes/registrar`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cc, nombre, apellido, email }),
+        headers: getAuthHeaders(),
+        body: JSON.stringify(solicitanteData),
       }
     );
 
     const data = await response.json();
+    console.log('Respuesta del servidor:', data);
 
-    if (response.ok) {
-      throw new Error(data.message || "Error en agregar");
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al agregar solicitante");
     }
 
     return data;
   } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 }
 
-export async function actualizar(cc, nombre, apellido, email) {
+export async function actualizar(solicitanteData) {
   try {
+    console.log('Datos a actualizar:', solicitanteData);
     const response = await fetch(
-      "http://127.0.0.1:8000/estudiantes/actualizar",
+      `${API_BASE_URL}/solicitantes/actualizar`,
       {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cc, nombre, apellido, email }),
+        headers: getAuthHeaders(),
+        body: JSON.stringify(solicitanteData),
       }
     );
 
     const data = await response.json();
+    console.log('Respuesta del servidor:', data);
 
     if (!response.ok) {
-      throw new Error(data.message || "Error al actualizar");
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al actualizar solicitante");
     }
 
     return data;
   } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 }
 
-export async function eliminar(cc) {
+export async function eliminar(identificacion) {
   try {
+    console.log('Intentando eliminar solicitante:', identificacion);
     const response = await fetch(
-      "http://127.0.0.1:8000/estudiantes/eliminar",
+      `${API_BASE_URL}/solicitantes/eliminar`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cc }),
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ identificacion }),
       }
     );
 
     const data = await response.json();
+    console.log('Respuesta del servidor:', data);
 
     if (!response.ok) {
-      throw new Error(data.message || "Error al eliminar");
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al eliminar solicitante");
     }
 
     return data;
   } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+// Función auxiliar para verificar el estado del servidor
+export async function checkServerStatus() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/solicitantes/obtener`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("Error al verificar el estado del servidor:", error);
+    return false;
+  }
+}
+
+// Funciones para productos
+export async function fetchProductos() {
+  try {
+    console.log('Intentando obtener productos...');
+    const response = await fetch(`${API_BASE_URL}/productos/`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Error al obtener los productos");
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function agregarProducto(productoData) {
+  try {
+    console.log('Datos del producto a enviar:', productoData);
+    const response = await fetch(
+      `${API_BASE_URL}/productos/`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productoData),
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al agregar producto");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function actualizarProducto(productoData) {
+  try {
+    console.log('Datos del producto a actualizar:', productoData);
+    const response = await fetch(
+      `${API_BASE_URL}/productos/${productoData.codigoInterno}`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productoData),
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al actualizar producto");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function eliminarProducto(codigoInterno) {
+  try {
+    console.log('Intentando eliminar producto:', codigoInterno);
+    const response = await fetch(
+      `${API_BASE_URL}/productos/${codigoInterno}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al eliminar producto");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 }

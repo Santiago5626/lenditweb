@@ -3,9 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Sidebar.css";
 import perfil from "../images/perfil.png";
+import { getCurrentUser, logout } from "../api/auth";
 
 const Sidebar = () => {
   const location = useLocation();
+  const user = getCurrentUser();
 
   const menuItems = [
     { name: "Inicio", icon: "home", path: "/inicio" },
@@ -14,14 +16,19 @@ const Sidebar = () => {
     { name: "Inventario", icon: "inventory", path: "/inventario" },
   ];
 
+  const handleLogout = (e) => {
+    e.preventDefault();
+    logout();
+  };
+
   return (
     <div className="sidebar flex flex-col h-screen bg-[#04395e] text-white p-4">
       <div className="flex flex-col flex-grow">
         <div className="user-info mb-6">
           <img src={perfil} alt="Perfil" className="profile-image" />
           <div className="user-text">
-            <h3>Sophia Wilson</h3>
-            <span>Administrador</span>
+            <h3>{user ? user.nombre : "Usuario"}</h3>
+            <span>{user ? user.rol : "Rol"}</span>
           </div>
         </div>
 
@@ -51,7 +58,7 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <a href="index.html" className="flex items-center gap-2">
+            <a href="/" onClick={handleLogout} className="flex items-center gap-2">
               <span className="material-symbols-outlined">logout</span>
               Cerrar sesión
             </a>

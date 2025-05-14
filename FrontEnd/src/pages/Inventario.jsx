@@ -1,13 +1,14 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar';
+import TablaInventario from '../components/TablaInventario';
 
 const Inventario = () => {
   return (
-    <div className="flex">
+    <div className="page-container">
       <Sidebar />
-      <main className="ml-[180px] p-5 flex-grow">
+      <main className="main-content">
         <h1 className="text-2xl font-bold mb-4">Inventario</h1>
-        <p>Contenido de la página de Inventario.</p>
+        <TablaInventario />
       </main>
     </div>
   );

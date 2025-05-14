@@ -1,0 +1,105 @@
+.container {
+  padding: 20px;
+}
+
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.filters input,
+.filters select {
+  max-width: 250px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+}
+
+.buttons button .material-symbols-outlined {
+  font-size: 24px;
+}
+
+/* Estilo especial para el botón de agregar con laptop */
+.btn-outline-success {
+  position: relative;
+}
+
+.btn-outline-success .add-icon {
+  position: absolute;
+  font-size: 16px;
+  right: 8px;
+  bottom: 8px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.table-section {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 1000px;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.error-container {
+  margin: 20px;
+  padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters input,
+  .filters select {
+    max-width: 100%;
+  }
+
+  .buttons {
+    justify-content: flex-end;
+  }
+}

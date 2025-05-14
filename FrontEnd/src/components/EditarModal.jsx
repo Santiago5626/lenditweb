@@ -2,24 +2,54 @@ import React, { useState, useEffect } from "react";
 import "./RegistrarModal.css";
 
 const EditarModal = ({ show, onClose, onEdit, userData }) => {
-  const [cc, setCC] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [email, setEmail] = useState("");
+  const [formData, setFormData] = useState({
+    identificacion: "",
+    primer_nombre: "",
+    segundo_nombre: "",
+    primer_apellido: "",
+    segundo_apellido: "",
+    correo: "",
+    telefono: "",
+    genero: "M",
+    rol: "aprendiz",
+    ficha: "",
+    programa: ""
+  });
 
   useEffect(() => {
     if (userData) {
-      setCC(userData.cc || "");
-      setNombre(userData.nombre || "");
-      setApellido(userData.apellido || "");
-      setEmail(userData.email || "");
+      setFormData({
+        identificacion: userData.identificacion || "",
+        primer_nombre: userData.primer_nombre || "",
+        segundo_nombre: userData.segundo_nombre || "",
+        primer_apellido: userData.primer_apellido || "",
+        segundo_apellido: userData.segundo_apellido || "",
+        correo: userData.correo || "",
+        telefono: userData.telefono || "",
+        genero: userData.genero || "M",
+        rol: userData.rol || "aprendiz",
+        ficha: userData.ficha || "",
+        programa: userData.programa || ""
+      });
     }
   }, [userData]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await onEdit({ cc, nombre, apellido, email });
-    onClose();
+    const dataToSubmit = {
+      ...formData,
+      // Si el rol es empleado, no enviamos ficha ni programa
+      ...(formData.rol === 'empleado' && { ficha: undefined, programa: undefined })
+    };
+    await onEdit(dataToSubmit);
   };
 
   if (!show) {
@@ -29,51 +59,118 @@ const EditarModal = ({ show, onClose, onEdit, userData }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>Editar Estudiante</h2>
+        <h2>Editar Solicitante</h2>
         <button className="modal-close" onClick={onClose}>
           &times;
         </button>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            id="cc"
-            name="cc"
-            placeholder="Cédula"
+            name="identificacion"
+            placeholder="Identificación"
             required
             className="form-control"
-            value={cc}
-            onChange={(e) => setCC(e.target.value)}
+            value={formData.identificacion}
+            onChange={handleChange}
+            readOnly
           />
           <input
             type="text"
-            id="nombre"
-            name="nombre"
-            placeholder="Nombre"
+            name="primer_nombre"
+            placeholder="Primer Nombre"
             required
             className="form-control"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            value={formData.primer_nombre}
+            onChange={handleChange}
           />
           <input
             type="text"
-            id="apellido"
-            name="apellido"
-            placeholder="Apellido"
+            name="segundo_nombre"
+            placeholder="Segundo Nombre"
+            className="form-control"
+            value={formData.segundo_nombre}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="primer_apellido"
+            placeholder="Primer Apellido"
             required
             className="form-control"
-            value={apellido}
-            onChange={(e) => setApellido(e.target.value)}
+            value={formData.primer_apellido}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="segundo_apellido"
+            placeholder="Segundo Apellido"
+            className="form-control"
+            value={formData.segundo_apellido}
+            onChange={handleChange}
           />
           <input
             type="email"
-            id="email"
-            name="email"
+            name="correo"
             placeholder="Correo electrónico"
             required
             className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.correo}
+            onChange={handleChange}
           />
+          <input
+            type="tel"
+            name="telefono"
+            placeholder="Teléfono"
+            required
+            className="form-control"
+            value={formData.telefono}
+            onChange={handleChange}
+          />
+          <select
+            name="genero"
+            className="form-control"
+            value={formData.genero}
+            onChange={handleChange}
+            required
+          >
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="O">Otro</option>
+          </select>
+          <select
+            name="rol"
+            className="form-control"
+            value={formData.rol}
+            onChange={handleChange}
+            required
+          >
+            <option value="aprendiz">Aprendiz</option>
+            <option value="empleado">Empleado</option>
+          </select>
+          
+          {formData.rol === 'aprendiz' && (
+            <>
+              <input
+                type="text"
+                name="ficha"
+                placeholder="Ficha"
+                required
+                className="form-control"
+                value={formData.ficha}
+                onChange={handleChange}
+              />
+              <input
+                type="text"
+                name="programa"
+                placeholder="Programa"
+                required
+                className="form-control"
+                value={formData.programa}
+                onChange={handleChange}
+              />
+            </>
+          )}
+          
           <button type="submit" className="btn btn-primary">Actualizar</button>
         </form>
       </div>

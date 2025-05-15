@@ -10,7 +10,7 @@ def create_admin_user():
     
     try:
         # Verificar si el usuario admin ya existe
-        existing_admin = db.query(Usuario).filter(Usuario.nombre == "admin").first()
+        existing_admin = db.query(Usuario).filter(Usuario.nombre == "Brian").first()
         
         if existing_admin:
             print("El usuario admin ya existe")
@@ -18,11 +18,11 @@ def create_admin_user():
         
         # Crear el usuario admin
         admin_user = Usuario(
-            nombre="admin",
+            nombre="Brian",
             email="admin@example.com",
-            password="admin123",
-            cc="admin",
-            rol="admin",
+            password="admin",
+            cc="1234",
+            rol="administrador",
             estado="activo"
         )
         

@@ -30,11 +30,21 @@ def create_jwt_token(user_id: int, nombre: str):
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token
 
+from create_admin import create_admin_user
+
 @router.post("/login")
 async def login_user(user: Login, db: Session = Depends(get_db)):
     try:
-        # Buscar el usuario por nombre
-        existing_user = db.query(Usuario).filter(Usuario.nombre == user.nombre).first()
+        # Verificar si existen usuarios en la base de datos
+        user_count = db.query(Usuario).count()
+        if user_count == 0:
+            # Si no hay usuarios, crear el admin
+            create_admin_user()
+            
+        # Buscar el usuario por nombre o cc
+        existing_user = db.query(Usuario).filter(
+            (Usuario.nombre == user.nombre) | (Usuario.cc == user.nombre)
+        ).first()
 
         # Verificar si el usuario existe
         if not existing_user:

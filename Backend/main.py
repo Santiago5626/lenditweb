@@ -10,12 +10,12 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from init_db import init_database
+from entidades.baseDatos.db import init_db
 
 app = FastAPI()
 
-# Inicializar la base de datos y crear usuario admin si no existe
-init_database()
+# Inicializar la base de datos
+init_db()
 
 # Orígenes permitidos (React corre en localhost:3000)
 origins = [
@@ -24,7 +24,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # también puedes usar ["*"] para permitir todos (no recomendado en producción)
+    allow_origins=origins,  
     allow_credentials=True,
     allow_methods=["*"],  # permite todos los métodos: GET, POST, etc.
     allow_headers=["*"],  # permite todos los headers

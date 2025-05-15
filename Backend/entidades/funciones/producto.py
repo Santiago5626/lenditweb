@@ -66,3 +66,35 @@ def delete_producto(db: Session, codigo_interno: str):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al eliminar el producto")
+
+def get_contadores(db: Session):
+    try:
+        equipos_disponibles = db.query(Producto).filter(
+            Producto.idTipoProducto == 1,  # Tipo: Equipo de cómputo
+            Producto.estado == "Disponible"
+        ).count()
+        
+        equipos_no_disponibles = db.query(Producto).filter(
+            Producto.idTipoProducto == 1,  # Tipo: Equipo de cómputo
+            Producto.estado != "Disponible"
+        ).count()
+        
+        cargadores_disponibles = db.query(Producto).filter(
+            Producto.idTipoProducto == 2,  # Tipo: Cargador
+            Producto.estado == "Disponible"
+        ).count()
+        
+        cargadores_no_disponibles = db.query(Producto).filter(
+            Producto.idTipoProducto == 2,  # Tipo: Cargador
+            Producto.estado != "Disponible"
+        ).count()
+        
+        return {
+            "equiposDisponibles": equipos_disponibles,
+            "equiposNoDisponibles": equipos_no_disponibles,
+            "cargadoresDisponibles": cargadores_disponibles,
+            "cargadoresNoDisponibles": cargadores_no_disponibles
+        }
+    except Exception as e:
+        logging.error(f"Error al obtener contadores: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al obtener contadores")

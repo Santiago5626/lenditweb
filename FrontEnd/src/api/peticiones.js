@@ -1,13 +1,41 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 // Función auxiliar para obtener el token
-const getAuthHeaders = () => {
+const getAuthHeaders = (isMultipart = false) => {
   const token = localStorage.getItem('token');
   return {
-    'Content-Type': 'application/json',
+    ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
     'Authorization': token ? `Bearer ${token}` : ''
   };
 };
+
+export async function importarSolicitantes(file) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/solicitantes/importar-excel`, {
+      method: 'POST',
+      headers: getAuthHeaders(true),
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || data.message || "Error al importar solicitantes");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error al importar solicitantes:", error);
+    throw error;
+  }
+}
 
 export async function fetchSolicitantes() {
   try {
@@ -261,6 +289,29 @@ export async function actualizarProducto(productoData) {
       stack: error.stack,
       name: error.name
     });
+    throw error;
+  }
+}
+
+export async function getContadores() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/productos/contadores`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Error al obtener los contadores");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error al obtener contadores:", error);
     throw error;
   }
 }

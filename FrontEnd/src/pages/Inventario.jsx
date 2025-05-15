@@ -7,7 +7,6 @@ const Inventario = () => {
     <div className="page-container">
       <Sidebar />
       <main className="main-content">
-        <h1 className="text-2xl font-bold mb-4">Inventario</h1>
         <TablaInventario />
       </main>
     </div>

@@ -6,10 +6,10 @@
 
 .resumen-wrapper {
   flex: 1;
-  max-width: 50%;
+  max-width: 100%;
 }
 
 .tabla-resumen-wrapper {
   flex: 1;
-  max-width: 50%;
+  max-width: 100%;
 }

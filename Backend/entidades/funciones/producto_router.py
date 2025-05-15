@@ -8,6 +8,10 @@ from entidades.funciones.login import verify_jwt_token
 
 router = APIRouter()
 
+@router.get("/contadores")
+def get_contadores_endpoint(db: Session = Depends(get_db), token: str = Depends(verify_jwt_token)):
+    return producto.get_contadores(db)
+
 @router.get("/", response_model=List[Producto])
 def get_productos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), token: str = Depends(verify_jwt_token)):
     productos = producto.get_productos(db, skip=skip, limit=limit)

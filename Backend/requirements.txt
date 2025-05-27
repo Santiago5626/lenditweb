@@ -1,0 +1,10 @@
+PyJWT
+pydantic
+fastapi
+uvicorn
+sqlalchemy
+pandas
+python-jose[cryptography]
+python-multipart
+openpyxl
+email-validator

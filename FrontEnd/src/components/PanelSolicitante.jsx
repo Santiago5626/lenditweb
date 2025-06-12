@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { fetchSolicitantes, agregar, actualizar, eliminar } from "../api/peticiones";
 import RegistrarModal from "./RegistrarModal";
 import EditarModal from "./EditarModal";
 import ImportarSolicitantesModal from "./ImportarSolicitantesModal";
-import TablaSolicitantesTable from "./TablaSolicitantesTable";
-import "./TablaSolicitantes.css";
+import TablaSolicitantesTableSimple from "./TablaSolicitantesTableSimple";
+import "../styles/components/TablaSolicitantes.css";
 
 const PanelSolicitante = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -18,6 +18,10 @@ const PanelSolicitante = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [filtroId, setFiltroId] = useState("");
     const [filtroFicha, setFiltroFicha] = useState("");
+
+    // Estados para paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const fetchUsuarios = async () => {
         setLoading(true);
@@ -101,12 +105,77 @@ const PanelSolicitante = () => {
         setShowEditModal(true);
     };
 
-    const filtrarUsuarios = () => {
-        return usuarios.filter(user => {
-            const matchId = user.identificacion.toLowerCase().includes(filtroId.toLowerCase());
-            const matchFicha = user.ficha?.toLowerCase().includes(filtroFicha.toLowerCase()) ?? true;
+    // Función para filtrar y ordenar usuarios con memoización
+    const usuariosFiltrados = useMemo(() => {
+        if (!Array.isArray(usuarios)) {
+            return [];
+        }
+
+        // Primero filtramos
+        const filtrados = usuarios.filter(user => {
+            const matchId = user.identificacion?.toLowerCase().includes(filtroId.toLowerCase()) ?? true;
+            const matchFicha = filtroFicha === "" || (user.ficha?.toString().toLowerCase().includes(filtroFicha.toLowerCase()) ?? true);
             return matchId && matchFicha;
         });
+
+        // Luego invertimos el orden para mostrar los últimos primero
+        return [...filtrados].reverse();
+    }, [usuarios, filtroId, filtroFicha]);
+
+    // Calcular total de items y páginas
+    const totalItems = useMemo(() => {
+        return usuariosFiltrados.length;
+    }, [usuariosFiltrados]);
+
+    const totalPages = useMemo(() => {
+        return Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    }, [totalItems, itemsPerPage]);
+
+    // Calcular usuarios paginados
+    const usuariosPaginados = useMemo(() => {
+        if (!Array.isArray(usuariosFiltrados) || usuariosFiltrados.length === 0) {
+            return [];
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        return usuariosFiltrados.slice(startIndex, endIndex);
+    }, [usuariosFiltrados, currentPage, itemsPerPage, totalItems]);
+
+    // Handler para cambiar de página
+    const handlePageChange = useCallback((page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            setSelectedUser(null);
+        }
+    }, [totalPages]);
+
+    // Handler para cambiar items por página
+    const handleItemsPerPageChange = useCallback((newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1);
+        setSelectedUser(null);
+    }, []);
+
+    // Asegurarnos de que currentPage sea válido
+    useEffect(() => {
+        const maxPage = Math.max(1, totalPages);
+        if (currentPage > maxPage) {
+            setCurrentPage(1);
+        }
+    }, [currentPage, totalPages]);
+
+    // Resetear página cuando se aplican filtros
+    const handleFiltroIdChange = (value) => {
+        setFiltroId(value);
+        setCurrentPage(1);
+        setSelectedUser(null);
+    };
+
+    const handleFiltroFichaChange = (value) => {
+        setFiltroFicha(value);
+        setCurrentPage(1);
+        setSelectedUser(null);
     };
 
     return (
@@ -118,14 +187,14 @@ const PanelSolicitante = () => {
                         className="form-control"
                         placeholder="Filtrar por Identificación"
                         value={filtroId}
-                        onChange={(e) => setFiltroId(e.target.value)}
+                        onChange={(e) => handleFiltroIdChange(e.target.value)}
                     />
                     <input
                         type="text"
                         className="form-control"
                         placeholder="Filtrar por Ficha"
                         value={filtroFicha}
-                        onChange={(e) => setFiltroFicha(e.target.value)}
+                        onChange={(e) => handleFiltroFichaChange(e.target.value)}
                     />
                 </div>
                 <div className="buttons">
@@ -160,8 +229,8 @@ const PanelSolicitante = () => {
                 </div>
             </div>
 
-            <TablaSolicitantesTable
-                usuarios={filtrarUsuarios()}
+            <TablaSolicitantesTableSimple
+                usuarios={usuariosPaginados}
                 selectedUser={selectedUser}
                 onCheckboxChange={handleCheckboxChange}
                 loading={loading}
@@ -169,6 +238,13 @@ const PanelSolicitante = () => {
                 onRetry={fetchUsuarios}
                 serverStatus={serverStatus}
                 onVerificarServidor={handleVerificarServidor}
+                // Props de paginación
+                currentPage={currentPage}
+                totalPages={totalPages}
+                itemsPerPage={itemsPerPage}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
             />
 
             <RegistrarModal

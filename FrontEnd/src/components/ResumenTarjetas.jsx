@@ -1,33 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import './ResumenTarjetas.css';
-import { getContadores } from '../api/peticiones';
+import '../styles/components/ResumenTarjetas.css';
+import { getContadores, fetchTiposProducto } from '../api/peticiones';
 
 const ResumenTarjetas = () => {
-  const [contadores, setContadores] = useState({
-    equiposDisponibles: 0,
-    equiposNoDisponibles: 0,
-    cargadoresDisponibles: 0,
-    cargadoresNoDisponibles: 0
-  });
+  const [contadores, setContadores] = useState({});
+  const [tiposProducto, setTiposProducto] = useState([]);
 
   useEffect(() => {
-    const fetchContadores = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getContadores();
-        setContadores(data);
+        const [contadoresData, tiposData] = await Promise.all([
+          getContadores(),
+          fetchTiposProducto()
+        ]);
+        setContadores(contadoresData);
+        setTiposProducto(tiposData);
       } catch (error) {
-        console.error('Error al obtener contadores:', error);
+        console.error('Error al obtener datos:', error);
       }
     };
 
-    fetchContadores();
+    fetchData();
   }, []);
 
+  // Solo mostrar contadores para equipo de cómputo y cargador
   const items = [
-    { label: 'Equipos de cómputo disponibles', value: contadores.equiposDisponibles },
-    { label: 'Equipos de cómputo no disponibles', value: contadores.equiposNoDisponibles },
-    { label: 'Cargadores disponibles', value: contadores.cargadoresDisponibles },
-    { label: 'Cargadores no disponibles', value: contadores.cargadoresNoDisponibles }
+    {
+      label: 'Equipos de cómputo disponibles',
+      value: contadores.equipo_de_computo_disponibles || 0
+    },
+    {
+      label: 'Equipos de cómputo no disponibles',
+      value: contadores.equipo_de_computo_no_disponibles || 0
+    },
+    {
+      label: 'Cargadores disponibles',
+      value: contadores.cargador_disponibles || 0
+    },
+    {
+      label: 'Cargadores no disponibles',
+      value: contadores.cargador_no_disponibles || 0
+    }
   ];
 
   const customColor = 'rgb(0, 48, 77)';
@@ -38,16 +51,18 @@ const ResumenTarjetas = () => {
         {items.map((item, index) => (
           <div className="col-6 mb-3" key={index}>
             <div className="card shadow-sm p-3 d-flex flex-row align-items-center">
-              <div className="rounded-circle" style={{
-                width: '50px', 
-                height: '50px', 
+              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{
+                width: '50px',
+                height: '50px',
                 marginRight: '15px',
-                backgroundColor: customColor
-              }}></div>
+                backgroundColor: customColor,
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '16px'
+              }}>
+                {item.value}
+              </div>
               <div>
-                <p className="mb-0 font-weight-bold" style={{ color: customColor }}>
-                  <strong>{item.value}</strong>
-                </p>
                 <p className="mb-0" style={{ color: customColor }}>
                   <strong>{item.label}</strong>
                 </p>

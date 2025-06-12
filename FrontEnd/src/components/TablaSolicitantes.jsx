@@ -1,177 +1,130 @@
-import React, { useState, useEffect } from "react";
-import { fetchSolicitantes, agregar, actualizar, eliminar } from "../api/peticiones";
-import RegistrarModal from "./RegistrarModal";
-import EditarModal from "./EditarModal";
-import ImportarSolicitantesModal from "./ImportarSolicitantesModal";
-import TablaSolicitantesTable from "./TablaSolicitantesTable";
-import "./TablaSolicitantes.css";
+import React, { useState, useEffect } from 'react';
+import '../styles/components/TablaSolicitantes.css';
+import TablaSolicitantesTable from './TablaSolicitantesTable';
+import EditarModal from './EditarModal';
+import RegistrarModal from './RegistrarModal';
+import ImportarSolicitantesModal from './ImportarSolicitantesModal';
+import PaginationControls from './PaginationControls';
+import { obtenerSolicitantes, eliminarSolicitante } from '../api/peticiones';
 
 const TablaSolicitantes = () => {
-  const [usuarios, setUsuarios] = useState([]);
-
-  const [showModal, setShowModal] = useState(false);
+  const [solicitantes, setSolicitantes] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [filtroId, setFiltroId] = useState("");
-  const [filtroFicha, setFiltroFicha] = useState("");
-
-  const fetchUsuarios = async () => {
-    try {
-      const data = await fetchSolicitantes();
-      setUsuarios(data);
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-    }
-  };
+  const [showRegistrarModal, setShowRegistrarModal] = useState(false);
+  const [showImportarModal, setShowImportarModal] = useState(false);
+  const [selectedSolicitante, setSelectedSolicitante] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchUsuarios();
+    fetchSolicitantes();
   }, []);
 
-  const handleRegister = async (solicitanteData) => {
+  const fetchSolicitantes = async () => {
     try {
-      await agregar(solicitanteData);
-      alert("¡Solicitante agregado exitosamente!");
-      setShowModal(false);
-      fetchUsuarios();
+      const data = await obtenerSolicitantes();
+      setSolicitantes(data);
     } catch (error) {
-      console.error("Error al registrar:", error);
-      alert("Error al agregar solicitante: " + error.message);
+      console.error('Error al obtener solicitantes:', error);
     }
   };
 
-  const handleEdit = async (solicitanteData) => {
-    try {
-      await actualizar(solicitanteData);
-      alert("¡Solicitante actualizado exitosamente!");
-      setShowEditModal(false);
-      fetchUsuarios();
-      setSelectedUser(null);
-    } catch (error) {
-      console.error("Error al actualizar:", error);
-      alert("Error al actualizar solicitante: " + error.message);
-    }
+  const handleEdit = (solicitante) => {
+    setSelectedSolicitante(solicitante);
+    setShowEditModal(true);
   };
 
-  const handleDelete = async () => {
-    if (!selectedUser) {
-      alert("Por favor seleccione un solicitante para eliminar");
-      return;
-    }
-
-    if (window.confirm(`¿Está seguro que desea eliminar a ${selectedUser.primer_nombre} ${selectedUser.primer_apellido}?`)) {
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Está seguro de eliminar este solicitante?')) {
       try {
-        await eliminar(selectedUser.identificacion);
-        alert("¡Solicitante eliminado exitosamente!");
-        fetchUsuarios();
-        setSelectedUser(null);
+        await eliminarSolicitante(id);
+        fetchSolicitantes();
       } catch (error) {
-        console.error("Error al eliminar:", error);
-        alert("Error al eliminar solicitante: " + error.message);
+        console.error('Error al eliminar solicitante:', error);
       }
     }
   };
 
-  const handleCheckboxChange = (user) => {
-    setSelectedUser(user === selectedUser ? null : user);
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setShowRegistrarModal(false);
+    setShowImportarModal(false);
+    setSelectedSolicitante(null);
+    fetchSolicitantes();
   };
 
-  const handleEditClick = () => {
-    if (!selectedUser) {
-      alert("Por favor seleccione un solicitante para editar");
-      return;
-    }
-    setShowEditModal(true);
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1);
   };
 
-  const filtrarUsuarios = () => {
-    return usuarios.filter(user => {
-      const matchId = user.identificacion.toLowerCase().includes(filtroId.toLowerCase());
-      const matchFicha = user.ficha?.toLowerCase().includes(filtroFicha.toLowerCase()) ?? true;
-      return matchId && matchFicha;
-    });
-  };
+  const filteredSolicitantes = solicitantes.filter(solicitante =>
+    Object.values(solicitante).some(value =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredSolicitantes.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="container">
-      <div className="controls-section">
-        <div className="filters">
+    <div className="tabla-solicitantes-container">
+      <div className="tabla-header">
+        <div className="search-container">
           <input
             type="text"
-            className="form-control"
-            placeholder="Filtrar por Identificación"
-            value={filtroId}
-            onChange={(e) => setFiltroId(e.target.value)}
-          />
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Filtrar por Ficha"
-            value={filtroFicha}
-            onChange={(e) => setFiltroFicha(e.target.value)}
+            placeholder="Buscar..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
           />
         </div>
-        <div className="buttons">
-          <button
-            className="btn btn-outline-danger"
-            onClick={handleDelete}
-            title="Eliminar solicitante"
-          >
-            <span className="material-symbols-outlined">delete</span>
+        <div className="buttons-container">
+          <button onClick={() => setShowRegistrarModal(true)} className="btn-registrar">
+            Registrar Solicitante
           </button>
-          <button
-            className="btn btn-outline-primary"
-            onClick={handleEditClick}
-            title="Editar solicitante"
-          >
-            <span className="material-symbols-outlined">person_edit</span>
-          </button>
-          <button
-            className="btn btn-outline-success"
-            onClick={() => setShowModal(true)}
-            title="Agregar solicitante"
-          >
-            <span className="material-symbols-outlined">person_add</span>
-          </button>
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => setShowImportModal(true)}
-            title="Importar solicitantes"
-          >
-            <span className="material-symbols-outlined">upload_file</span>
+          <button onClick={() => setShowImportarModal(true)} className="btn-importar">
+            Importar Excel
           </button>
         </div>
       </div>
 
       <TablaSolicitantesTable
-        usuarios={filtrarUsuarios()}
-        selectedUser={selectedUser}
-        onCheckboxChange={handleCheckboxChange}
-        onRetry={fetchUsuarios}
-      />
-
-      <RegistrarModal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        onRegister={handleRegister}
-      />
-
-      <EditarModal
-        show={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedUser(null);
-        }}
+        solicitantes={currentItems}
         onEdit={handleEdit}
-        userData={selectedUser}
+        onDelete={handleDelete}
       />
 
-      <ImportarSolicitantesModal
-        show={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImportComplete={fetchUsuarios}
+      <PaginationControls
+        currentPage={currentPage}
+        totalItems={filteredSolicitantes.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
       />
+
+      {showEditModal && (
+        <EditarModal
+          show={showEditModal}
+          handleClose={handleCloseModal}
+          solicitante={selectedSolicitante}
+        />
+      )}
+
+      {showRegistrarModal && (
+        <RegistrarModal
+          show={showRegistrarModal}
+          handleClose={handleCloseModal}
+        />
+      )}
+
+      {showImportarModal && (
+        <ImportarSolicitantesModal
+          show={showImportarModal}
+          handleClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React from "react";
 import Sidebar from "../components/Sidebar";
 import ResumenTarjetas from "../components/ResumenTarjetas";
 import PanelSolicitante from "../components/PanelSolicitante";
-import "./inicio.css";
+import "../styles/pages/inicio.css";
 
 const Inicio = () => {
 

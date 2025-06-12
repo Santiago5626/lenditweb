@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { fetchProductos, agregarProducto, actualizarProducto, eliminarProducto } from "../api/peticiones";
+import { fetchProductos, agregarProducto, actualizarProducto, eliminarProducto, fetchTiposProducto } from "../api/peticiones";
 import RegistrarProductoModal from "./RegistrarProductoModal";
 import EditarProductoModal from "./EditarProductoModal";
-import "./TablaInventario.css";
+import "../styles/components/TablaInventario.css";
 
 const TablaInventario = () => {
   const [productos, setProductos] = useState([]);
+  const [tiposProducto, setTiposProducto] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -18,11 +19,15 @@ const TablaInventario = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchProductos();
-      setProductos(data);
+      const [productosData, tiposData] = await Promise.all([
+        fetchProductos(),
+        fetchTiposProducto()
+      ]);
+      setProductos(productosData);
+      setTiposProducto(tiposData);
       setLoading(false);
     } catch (error) {
-      console.error("Error al cargar productos:", error);
+      console.error("Error al cargar datos:", error);
       setError(error.message || "Error al cargar los datos");
       setLoading(false);
     }
@@ -63,9 +68,9 @@ const TablaInventario = () => {
       return;
     }
 
-    if (window.confirm(`¿Está seguro que desea eliminar el producto ${selectedProduct.nombreProducto}?`)) {
+    if (window.confirm(`¿Está seguro que desea eliminar el producto ${selectedProduct.NOMBRE}?`)) {
       try {
-        await eliminarProducto(selectedProduct.codigoInterno);
+        await eliminarProducto(selectedProduct.CODIGO_INTERNO);
         alert("¡Producto eliminado exitosamente!");
         await fetchData();
         setSelectedProduct(null);
@@ -90,12 +95,22 @@ const TablaInventario = () => {
 
   const filtrarProductos = () => {
     return productos.filter(product => {
-      const matchCodigo = product.codigoInterno.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
-                         product.codigoSena?.toLowerCase().includes(filtroCodigo.toLowerCase()) || 
-                         product.serial?.toLowerCase().includes(filtroCodigo.toLowerCase());
-      const matchTipo = filtroTipo === "" || product.idTipoProducto.toString() === filtroTipo;
+      const codigoInterno = product.CODIGO_INTERNO || '';
+      const placaSena = product.PLACA_SENA || '';
+      const serial = product.SERIAL || '';
+      const idTipo = product.IDTIPOPRODUCTO;
+
+      const matchCodigo = codigoInterno.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
+        placaSena.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
+        serial.toLowerCase().includes(filtroCodigo.toLowerCase());
+      const matchTipo = filtroTipo === "" || idTipo.toString() === filtroTipo;
       return matchCodigo && matchTipo;
     });
+  };
+
+  const getTipoProductoNombre = (idTipo) => {
+    const tipo = tiposProducto.find(t => t.IDTIPOPRODUCTO === idTipo);
+    return tipo ? tipo.NOMBRE_TIPO_PRODUCTO : 'Desconocido';
   };
 
   if (loading) {
@@ -114,8 +129,8 @@ const TablaInventario = () => {
       <div className="error-container alert alert-danger">
         <h4>Error al cargar los datos</h4>
         <p>{error}</p>
-        <button 
-          className="btn btn-primary mt-3" 
+        <button
+          className="btn btn-primary mt-3"
           onClick={fetchData}
         >
           Intentar nuevamente
@@ -141,27 +156,30 @@ const TablaInventario = () => {
             onChange={(e) => setFiltroTipo(e.target.value)}
           >
             <option value="">Todos los tipos</option>
-            <option value="1">Equipo</option>
-            <option value="2">Accesorio</option>
+            {tiposProducto.map(tipo => (
+              <option key={tipo.IDTIPOPRODUCTO} value={tipo.IDTIPOPRODUCTO.toString()}>
+                {tipo.NOMBRE_TIPO_PRODUCTO}
+              </option>
+            ))}
           </select>
         </div>
         <div className="buttons">
-          <button 
+          <button
             className="btn btn-outline-danger"
             onClick={handleDelete}
             title="Eliminar producto"
           >
             <span className="material-symbols-outlined">delete</span>
           </button>
-          <button 
+          <button
             className="btn btn-outline-primary"
             onClick={handleEditClick}
             title="Editar producto"
           >
             <span className="material-symbols-outlined">edit</span>
           </button>
-          <button 
-            className="btn btn-outline-success" 
+          <button
+            className="btn btn-outline-success"
             onClick={() => setShowModal(true)}
             title="Agregar producto"
           >
@@ -193,25 +211,25 @@ const TablaInventario = () => {
             </thead>
             <tbody>
               {filtrarProductos().map((product) => (
-                <tr 
-                  key={product.codigoInterno}
+                <tr
+                  key={product.CODIGO_INTERNO}
                   className={selectedProduct === product ? "table-active" : ""}
                 >
                   <td>
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedProduct === product}
                       onChange={() => handleCheckboxChange(product)}
                     />
                   </td>
-                  <td>{product.codigoInterno}</td>
-                  <td>{product.codigoSena || '-'}</td>
-                  <td>{product.serial || '-'}</td>
-                  <td>{product.nombreProducto}</td>
-                  <td>{product.marca || '-'}</td>
-                  <td>{product.idTipoProducto === 1 ? 'Equipo' : 'Accesorio'}</td>
-                  <td>{product.estado}</td>
-                  <td>{product.descripcion || '-'}</td>
+                  <td>{product.CODIGO_INTERNO}</td>
+                  <td>{product.PLACA_SENA || '-'}</td>
+                  <td>{product.SERIAL || '-'}</td>
+                  <td>{product.NOMBRE}</td>
+                  <td>{product.MARCA || '-'}</td>
+                  <td>{getTipoProductoNombre(product.IDTIPOPRODUCTO)}</td>
+                  <td>{product.ESTADO}</td>
+                  <td>{product.OBSERVACIONES || '-'}</td>
                 </tr>
               ))}
             </tbody>

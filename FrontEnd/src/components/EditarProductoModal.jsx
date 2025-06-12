@@ -1,29 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import './RegistrarModal.css';
+import '../styles/components/RegistrarModal.css';
+import { fetchTiposProducto } from '../api/peticiones';
 
 const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
   const [formData, setFormData] = useState({
-    codigoInterno: '',
-    codigoSena: '',
-    serial: '',
-    nombreProducto: '',
-    marca: '',
-    descripcion: '',
-    estado: 'Disponible',
-    idTipoProducto: '1'
+    CODIGO_INTERNO: '',
+    NOMBRE: '',
+    IDTIPOPRODUCTO: '1',
+    PLACA_SENA: '',
+    SERIAL: '',
+    MARCA: '',
+    ESTADO: 'Disponible',
+    OBSERVACIONES: ''
   });
+
+  const [tiposProducto, setTiposProducto] = useState([]);
+
+  useEffect(() => {
+    const cargarTiposProducto = async () => {
+      try {
+        const tipos = await fetchTiposProducto();
+        setTiposProducto(tipos);
+      } catch (error) {
+        console.error('Error al cargar tipos de producto:', error);
+      }
+    };
+
+    if (show) {
+      cargarTiposProducto();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (productData) {
       setFormData({
-        codigoInterno: productData.codigoInterno || '',
-        codigoSena: productData.codigoSena || '',
-        serial: productData.serial || '',
-        nombreProducto: productData.nombreProducto || '',
-        marca: productData.marca || '',
-        descripcion: productData.descripcion || '',
-        estado: productData.estado || 'Disponible',
-        idTipoProducto: productData.idTipoProducto.toString() || '1'
+        CODIGO_INTERNO: productData.CODIGO_INTERNO || '',
+        NOMBRE: productData.NOMBRE || '',
+        IDTIPOPRODUCTO: productData.IDTIPOPRODUCTO?.toString() || '1',
+        PLACA_SENA: productData.PLACA_SENA || '',
+        SERIAL: productData.SERIAL || '',
+        MARCA: productData.MARCA || '',
+        ESTADO: productData.ESTADO || 'Disponible',
+        OBSERVACIONES: productData.OBSERVACIONES || ''
       });
     }
   }, [productData]);
@@ -52,12 +70,12 @@ const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="codigoInterno">Código Interno*</label>
+            <label htmlFor="CODIGO_INTERNO">Código Interno*</label>
             <input
               type="text"
-              id="codigoInterno"
-              name="codigoInterno"
-              value={formData.codigoInterno}
+              id="CODIGO_INTERNO"
+              name="CODIGO_INTERNO"
+              value={formData.CODIGO_INTERNO}
               onChange={handleChange}
               required
               className="form-control"
@@ -66,12 +84,12 @@ const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="nombreProducto">Nombre del Producto*</label>
+            <label htmlFor="NOMBRE">Nombre del Producto*</label>
             <input
               type="text"
-              id="nombreProducto"
-              name="nombreProducto"
-              value={formData.nombreProducto}
+              id="NOMBRE"
+              name="NOMBRE"
+              value={formData.NOMBRE}
               onChange={handleChange}
               required
               className="form-control"
@@ -79,53 +97,57 @@ const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="idTipoProducto">Tipo de Producto*</label>
+            <label htmlFor="IDTIPOPRODUCTO">Tipo de Producto*</label>
             <select
-              id="idTipoProducto"
-              name="idTipoProducto"
-              value={formData.idTipoProducto}
+              id="IDTIPOPRODUCTO"
+              name="IDTIPOPRODUCTO"
+              value={formData.IDTIPOPRODUCTO}
               onChange={handleChange}
               required
               className="form-control"
             >
-              <option value="1">Equipo</option>
-              <option value="2">Accesorio</option>
+              {tiposProducto.map(tipo => (
+                <option key={tipo.IDTIPOPRODUCTO} value={tipo.IDTIPOPRODUCTO.toString()}>
+                  {tipo.NOMBRE_TIPO_PRODUCTO}
+                </option>
+              ))}
             </select>
           </div>
 
-          {formData.idTipoProducto === '1' && (
+          {/* Solo mostrar campos adicionales para equipo de cómputo */}
+          {tiposProducto.find(t => t.id === parseInt(formData.IDTIPOPRODUCTO))?.nombre === "equipo de cómputo" && (
             <>
               <div className="form-group">
-                <label htmlFor="codigoSena">PLACA SENA</label>
+                <label htmlFor="PLACA_SENA">PLACA SENA</label>
                 <input
                   type="text"
-                  id="codigoSena"
-                  name="codigoSena"
-                  value={formData.codigoSena}
+                  id="PLACA_SENA"
+                  name="PLACA_SENA"
+                  value={formData.PLACA_SENA}
                   onChange={handleChange}
                   className="form-control"
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="serial">Serial</label>
+                <label htmlFor="SERIAL">Serial</label>
                 <input
                   type="text"
-                  id="serial"
-                  name="serial"
-                  value={formData.serial}
+                  id="SERIAL"
+                  name="SERIAL"
+                  value={formData.SERIAL}
                   onChange={handleChange}
                   className="form-control"
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="marca">Marca</label>
+                <label htmlFor="MARCA">Marca</label>
                 <input
                   type="text"
-                  id="marca"
-                  name="marca"
-                  value={formData.marca}
+                  id="MARCA"
+                  name="MARCA"
+                  value={formData.MARCA}
                   onChange={handleChange}
                   className="form-control"
                 />
@@ -134,11 +156,11 @@ const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
           )}
 
           <div className="form-group">
-            <label htmlFor="estado">Estado*</label>
+            <label htmlFor="ESTADO">Estado*</label>
             <select
-              id="estado"
-              name="estado"
-              value={formData.estado}
+              id="ESTADO"
+              name="ESTADO"
+              value={formData.ESTADO}
               onChange={handleChange}
               required
               className="form-control"
@@ -151,11 +173,11 @@ const EditarProductoModal = ({ show, onClose, onEdit, productData }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="descripcion">Observaciones</label>
+            <label htmlFor="OBSERVACIONES">Observaciones</label>
             <textarea
-              id="descripcion"
-              name="descripcion"
-              value={formData.descripcion}
+              id="OBSERVACIONES"
+              name="OBSERVACIONES"
+              value={formData.OBSERVACIONES}
               onChange={handleChange}
               className="form-control"
               rows="3"

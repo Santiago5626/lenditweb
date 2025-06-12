@@ -1,5 +1,6 @@
 PyJWT
 pydantic
+pydantic-settings
 fastapi
 uvicorn
 sqlalchemy
@@ -8,3 +9,7 @@ python-jose[cryptography]
 python-multipart
 openpyxl
 email-validator
+mysqlclient
+mysql-connector-python
+pymysql
+cryptography

@@ -1,61 +1,122 @@
-import React, { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
-import { fetchSolicitantes } from "../api/peticiones";
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../components/Sidebar';
+import RegistrarPrestamoModal from '../components/RegistrarPrestamoModal';
+import { fetchPrestamos, fetchSolicitantes } from '../api/peticiones';
+import '../styles/pages/inicio.css';
+
 const Circulacion = () => {
-  const [prestamo, setUsuarios] = useState([]); // Estado para almacenar los usuarios
-  const [loading, setLoading] = useState(true); //estado para mostrar el cargando
+  const [prestamos, setPrestamos] = useState([]);
+  const [solicitantes, setSolicitantes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Función para obtener los usuarios al montar el componente
-    const obtenerSolicitantes = async () => {
-      try {
-        const data = await fetchSolicitantes(
-          "http://127.0.0.1:8000/prestamo/obtener"
-        );
-        setUsuarios(data); // Guardamos los usuarios en el estado
-      } catch (error) {
-        console.error("Error al obtener los usuarios:", error);
-      } finally {
-        setLoading(false); // Indicamos que ya se terminó la carga
-      }
-    };
+    cargarDatos();
+  }, []);
 
-    obtenerSolicitantes(); // Llamamos a la función
-  }, []); // El array vacío asegura que solo se ejecute una vez (al montar el componente)
+  const cargarDatos = async () => {
+    try {
+      const [prestamosData, solicitantesData] = await Promise.all([
+        fetchPrestamos(),
+        fetchSolicitantes()
+      ]);
+      setPrestamos(prestamosData);
+      setSolicitantes(solicitantesData);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cargarPrestamos = async () => {
+    await cargarDatos();
+  };
+
+  const obtenerNombreSolicitante = (identificacion) => {
+    const solicitante = solicitantes.find(s => s.identificacion === identificacion);
+    if (solicitante) {
+      return `${solicitante.primer_nombre} ${solicitante.primer_apellido}`;
+    }
+    return identificacion; // Fallback to ID if name not found
+  };
+
+  const handlePrestamoCreado = () => {
+    cargarPrestamos();
+  };
 
   if (loading) {
-    return <div>Cargando usuarios...</div>; // Muestra un mensaje de carga mientras se obtienen los datos
+    return <div>Cargando préstamos...</div>;
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        justifyItems: "center",
-        textAlign: "center",
-      }}
-    >
+    <div className="page-container">
       <Sidebar />
-      <main style={{ marginLeft: "180px", padding: "20px", flexGrow: 1 }}>
-        <h1>PRESTAMOS</h1>
+      <main className="main-content">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+          <h1>CIRCULACIÓN - PRÉSTAMOS</h1>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer"
+            }}
+          >
+            Nuevo Préstamo
+          </button>
+        </div>
 
-        <ul>
-          {prestamo.length > 0 ? (
-            prestamo.map((prestamo) => (
-              <li key={prestamo.id}>
-                ID: _{prestamo.id} Cedula Estudiante : {prestamo.ccEstudiante}
-                ID PRODUCTO :{prestamo.idProducto} FECHA DE ENTREGA{" "}
-                {prestamo.fechaFinal} ESTADO {prestamo.estado}
-              </li>
-            ))
-          ) : (
-            <li>NO HAY ESTUDIANTES DISPONIBLES</li>
-          )}
-        </ul>
-        <button>AGREGAR</button>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "white" }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f8f9fa" }}>
+                <th style={{ padding: "12px", border: "1px solid #dee2e6" }}>ID</th>
+                <th style={{ padding: "12px", border: "1px solid #dee2e6" }}>Solicitante</th>
+                <th style={{ padding: "12px", border: "1px solid #dee2e6" }}>ID Producto</th>
+                <th style={{ padding: "12px", border: "1px solid #dee2e6" }}>Fecha Devolución</th>
+                <th style={{ padding: "12px", border: "1px solid #dee2e6" }}>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prestamos.map((prestamo) => (
+                <tr key={prestamo.id || prestamo.IDPRESTAMO} style={{ borderBottom: "1px solid #dee2e6" }}>
+                  <td style={{ padding: "12px", border: "1px solid #dee2e6" }}>
+                    {prestamo.id || prestamo.IDPRESTAMO}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #dee2e6" }}>
+                    {obtenerNombreSolicitante(prestamo.identificacionSolicitante || prestamo.IDENTIFICACION_SOLICITANTE)}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #dee2e6" }}>
+                    {prestamo.idProducto || prestamo.IDPRODUCTO}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #dee2e6" }}>
+                    {prestamo.fechaFinal || prestamo.FECHA_FINAL}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #dee2e6" }}>
+                    <span style={{
+                      padding: "5px 10px",
+                      borderRadius: "15px",
+                      backgroundColor: (prestamo.estado === 'activo' || prestamo.estado === 1) ? "#28a745" : "#dc3545",
+                      color: "white"
+                    }}>
+                      {(prestamo.estado === 'activo' || prestamo.estado === 1) ? "Activo" : "Finalizado"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        <button>ELIMINAR</button>
+        <RegistrarPrestamoModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onPrestamoCreado={handlePrestamoCreado}
+        />
       </main>
     </div>
   );

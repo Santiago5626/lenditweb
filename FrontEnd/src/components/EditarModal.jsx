@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./RegistrarModal.css";
+import "../styles/components/RegistrarModal.css";
 
 const EditarModal = ({ show, onClose, onEdit, userData }) => {
   const [formData, setFormData] = useState({

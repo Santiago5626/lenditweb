@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./Sidebar.css";
+import "../styles/components/Sidebar.css";
 import perfil from "../images/perfil.png";
 import { getCurrentUser, logout } from "../api/auth";
 

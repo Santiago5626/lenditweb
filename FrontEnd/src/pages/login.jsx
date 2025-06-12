@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../images/logo.png";
 import { login } from "../api/auth.js";
+import "../styles/pages/Login.css";
 
 const Login = () => {
   const navigate = useNavigate();

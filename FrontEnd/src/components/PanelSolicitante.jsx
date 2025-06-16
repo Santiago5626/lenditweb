@@ -114,7 +114,8 @@ const PanelSolicitante = () => {
         // Primero filtramos
         const filtrados = usuarios.filter(user => {
             const matchId = user.identificacion?.toLowerCase().includes(filtroId.toLowerCase()) ?? true;
-            const matchFicha = filtroFicha === "" || (user.ficha?.toString().toLowerCase().includes(filtroFicha.toLowerCase()) ?? true);
+            const matchFicha = filtroFicha === "" || 
+                (user.rol === 'aprendiz' && user.ficha && user.ficha.toString().toLowerCase().includes(filtroFicha.toLowerCase()));
             return matchId && matchFicha;
         });
 

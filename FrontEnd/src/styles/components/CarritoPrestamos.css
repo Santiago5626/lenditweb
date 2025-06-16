@@ -1,0 +1,261 @@
+.carrito-prestamos {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.carrito-prestamos:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.carrito-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.carrito-header h3 {
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carrito-header h3::before {
+  content: "shopping_cart";
+  font-family: "Material Symbols Outlined";
+  font-size: 24px;
+  color: #00304d;
+}
+
+.solicitante-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #2196f3;
+}
+
+.solicitante-info h4 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.solicitante-info p {
+  margin: 0;
+  color: #424242;
+  font-weight: 500;
+}
+
+.solicitante-info small {
+  color: #666;
+  font-weight: 400;
+}
+
+.productos-lista {
+  margin-bottom: 20px;
+}
+
+.productos-lista h4 {
+  margin: 0 0 12px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.productos-lista ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.productos-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.productos-lista li:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.productos-lista li span {
+  font-weight: 500;
+  color: #495057;
+}
+
+.productos-lista .btn {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.fecha-devolucion {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #fff3cd;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+}
+
+.fecha-devolucion label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.fecha-devolucion input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #ffeaa7;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.fecha-devolucion input:focus {
+  outline: none;
+  border-color: #ffc107;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+}
+
+.carrito-footer {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 2px solid #f8f9fa;
+}
+
+.carrito-footer .btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.carrito-footer .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 48, 77, 0.3);
+}
+
+.carrito-footer .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.carrito-vacio {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.carrito-vacio .material-symbols-outlined {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.carrito-vacio p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #00304d;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #004b76;
+}
+
+.btn-outline-danger {
+  background-color: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .carrito-prestamos {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .carrito-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .productos-lista li {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .carrito-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

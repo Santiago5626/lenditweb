@@ -26,9 +26,9 @@ const PaginationControls = ({
     const showNavigationControls = totalPages > 1;
 
     return (
-        <div>
-            {/* Información de paginación */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="pagination-wrapper">
+            {/* Información de paginación y controles por página (arriba) */}
+            <div className="pagination-top d-flex justify-content-between align-items-center mb-3">
                 <div className="pagination-info">
                     <small className="text-muted">
                         Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} registros
@@ -57,9 +57,9 @@ const PaginationControls = ({
                 </div>
             </div>
 
-            {/* Controles de navegación - solo mostrar si hay más de una página */}
+            {/* Controles de navegación - solo mostrar si hay más de una página (abajo) */}
             {showNavigationControls && (
-                <div className="d-flex justify-content-center mt-3">
+                <div className="pagination-bottom d-flex justify-content-center mt-4">
                     <nav aria-label="Paginación de solicitantes">
                         <ul className="pagination pagination-sm">
                             {/* Botón Anterior */}

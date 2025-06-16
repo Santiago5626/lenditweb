@@ -92,12 +92,12 @@ export async function importarSolicitantes(file, signal = null) {
         window.location.href = '/login';
         throw new Error('Sesión expirada o inválida');
       }
-      
+
       // Si hay errores específicos en la respuesta, los usamos directamente
       if (data.errores && Array.isArray(data.errores)) {
         throw new Error(JSON.stringify(data)); // Enviamos toda la respuesta para mantener la estructura
       }
-      
+
       // Si no hay errores específicos, lanzamos el error general
       console.error('Error del servidor:', response.status, data);
       throw new Error(data.detail || data.message || `Error ${response.status}: ${response.statusText}`);
@@ -515,11 +515,128 @@ export async function eliminarProducto(codigoInterno) {
   }
 }
 
-// Funciones para préstamos
-export async function fetchPrestamos() {
+export async function importarProductos(file, signal = null) {
+  // Declarar timeoutId fuera del try para que esté disponible en finally
+  let timeoutId = null;
+
   try {
-    console.log('Intentando obtener préstamos...');
-    const response = await fetch(`${API_BASE_URL}/prestamo/obtener`, {
+    console.log('Iniciando importación de productos:', file.name, 'Tipo:', file.type, 'Tamaño:', file.size);
+
+    // Validar el archivo antes de enviarlo
+    if (!file.name.endsWith('.xlsx')) {
+      throw new Error('El archivo debe tener extensión .xlsx');
+    }
+
+    if (file.size === 0) {
+      throw new Error('El archivo está vacío');
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      throw new Error('El archivo es demasiado grande (máximo 10MB)');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Authorization': token ? `Bearer ${token}` : '',
+    };
+    console.log('Headers de la petición:', headers);
+    console.log('FormData creado, enviando petición...');
+
+    // Crear un AbortController para el timeout
+    const timeoutController = new AbortController();
+    timeoutId = setTimeout(() => timeoutController.abort(), 30000); // 30 segundos de timeout
+
+    // Usar el signal proporcionado o el de timeout
+    let finalSignal = timeoutController.signal;
+
+    if (signal) {
+      // Si hay un signal de cancelación manual, escuchar ambos
+      signal.addEventListener('abort', () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutController.abort();
+      });
+      finalSignal = signal;
+    }
+
+    const fetchOptions = {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+      credentials: 'include',
+      signal: finalSignal
+    };
+
+    const response = await fetch(`${API_BASE_URL}/productos/importar-excel`, fetchOptions);
+    if (timeoutId) clearTimeout(timeoutId);
+
+    console.log('Respuesta del servidor:', response.status, response.statusText);
+    console.log('Headers de respuesta:', Object.fromEntries(response.headers.entries()));
+
+    let data;
+    const textResponse = await response.text();
+    console.log('Respuesta cruda del servidor:', textResponse);
+
+    try {
+      data = JSON.parse(textResponse);
+      console.log('Datos parseados:', data);
+    } catch (e) {
+      console.error('Error al parsear respuesta JSON:', e);
+      console.error('Respuesta que no se pudo parsear:', textResponse);
+      throw new Error(`Error al procesar la respuesta del servidor: ${textResponse}`);
+    }
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+
+      // Si hay errores específicos en la respuesta, los usamos directamente
+      if (data.errores && Array.isArray(data.errores)) {
+        throw new Error(JSON.stringify(data)); // Enviamos toda la respuesta para mantener la estructura
+      }
+
+      // Si no hay errores específicos, lanzamos el error general
+      console.error('Error del servidor:', response.status, data);
+      throw new Error(data.detail || data.message || `Error ${response.status}: ${response.statusText}`);
+    }
+
+    return data;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      if (error.message.includes('timeout')) {
+        console.error('=== IMPORTACIÓN CANCELADA POR TIMEOUT ===');
+        throw new Error('La importación excedió el tiempo límite de 30 segundos');
+      } else {
+        console.log('=== IMPORTACIÓN CANCELADA POR USUARIO ===');
+        throw error;
+      }
+    }
+    console.error("Error detallado al importar productos:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type
+    });
+    throw error;
+  } finally {
+    // Limpiar recursos
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+// Funciones para solicitudes y préstamos
+export async function fetchSolicitudes() {
+  try {
+    console.log('Intentando obtener solicitudes...');
+    const response = await fetch(`${API_BASE_URL}/solicitudes/obtener`, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include'
@@ -531,11 +648,81 @@ export async function fetchPrestamos() {
         throw new Error('Sesión expirada o inválida');
       }
       const errorData = await response.json();
-      throw new Error(errorData.detail || "Error al obtener los préstamos");
+      throw new Error(errorData.detail || "Error al obtener las solicitudes");
     }
 
     const data = await response.json();
     return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function crearSolicitud(solicitudData) {
+  try {
+    console.log('Datos de la solicitud a enviar:', solicitudData);
+    const response = await fetch(
+      `${API_BASE_URL}/solicitudes/crear`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(solicitudData),
+        credentials: 'include'
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al crear solicitud");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function agregarProductoASolicitud(productoSolicitudData) {
+  try {
+    console.log('Datos del producto-solicitud a enviar:', productoSolicitudData);
+    const response = await fetch(
+      `${API_BASE_URL}/solicitudes/agregar-producto`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productoSolicitudData),
+        credentials: 'include'
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al agregar producto a la solicitud");
+    }
+
+    return data;
   } catch (error) {
     console.error("Error detallado:", {
       message: error.message,
@@ -568,6 +755,140 @@ export async function crearPrestamo(prestamoData) {
         throw new Error('Sesión expirada o inválida');
       }
       throw new Error(data.detail || "Error al crear préstamo");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function fetchPrestamos() {
+  try {
+    console.log('Intentando obtener préstamos...');
+    const response = await fetch(`${API_BASE_URL}/prestamo/obtener`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Error al obtener los préstamos");
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function devolverPrestamo(idPrestamo) {
+  try {
+    console.log('Intentando devolver préstamo:', idPrestamo);
+    const response = await fetch(
+      `${API_BASE_URL}/prestamo/${idPrestamo}/devolver`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al devolver el préstamo");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function actualizarEstadoSolicitud(solicitudData) {
+  try {
+    console.log('Datos de actualización de solicitud:', solicitudData);
+    const response = await fetch(
+      `${API_BASE_URL}/solicitudes/actualizar-estado`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(solicitudData),
+        credentials: 'include'
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al actualizar estado de la solicitud");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    throw error;
+  }
+}
+
+export async function prolongarPrestamo(idPrestamo, dias = 7) {
+  try {
+    console.log('Intentando prolongar préstamo:', idPrestamo, 'por', dias, 'días');
+    const response = await fetch(
+      `${API_BASE_URL}/prestamo/${idPrestamo}/prolongar`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ dias }),
+        credentials: 'include'
+      }
+    );
+
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Sesión expirada o inválida');
+      }
+      throw new Error(data.detail || "Error al prolongar el préstamo");
     }
 
     return data;

@@ -1,0 +1,220 @@
+.selector-productos {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.selector-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.selector-header h3 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+
+.filtros {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filtros .form-control {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.filtros .form-control:focus {
+  outline: none;
+  border-color: #00304d;
+  box-shadow: 0 0 0 0.2rem rgba(0, 48, 77, 0.25);
+}
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.producto-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.producto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #00304d;
+  background: #e8f4f8;
+}
+
+.producto-info {
+  margin-bottom: 10px;
+}
+
+.producto-info h4 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.producto-info p {
+  margin: 0 0 2px 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.producto-info .codigo {
+  color: #00304d;
+  font-weight: 500;
+}
+
+.producto-info .placa {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.producto-info .tipo {
+  color: #666;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.producto-info .marca {
+  color: #fd7e14;
+  font-weight: 500;
+}
+
+.producto-actions {
+  text-align: center;
+}
+
+.producto-actions .btn {
+  width: 100%;
+  padding: 6px 12px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.producto-actions .btn:hover {
+  transform: translateY(-1px);
+}
+
+.no-productos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.no-productos .material-symbols-outlined {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.no-productos p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #00304d;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #004b76;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .selector-productos {
+    padding: 15px;
+  }
+
+  .filtros {
+    flex-direction: column;
+  }
+
+  .filtros .form-control {
+    min-width: auto;
+  }
+
+  .productos-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .producto-card {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .selector-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .producto-info h4 {
+    font-size: 1rem;
+  }
+
+  .producto-info p {
+    font-size: 0.85rem;
+  }
+}

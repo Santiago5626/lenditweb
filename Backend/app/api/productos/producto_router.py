@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.database.db import get_db
@@ -35,3 +35,11 @@ def update_producto_endpoint(codigo_interno: str, producto_data: ProductoCreate,
 @router.delete("/{codigo_interno}")
 def delete_producto_endpoint(codigo_interno: str, db: Session = Depends(get_db), token: str = Depends(verify_jwt_token)):
     return producto.delete_producto(db=db, codigo_interno=codigo_interno)
+
+@router.post("/importar-excel")
+async def importar_productos_excel(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_jwt_token)
+):
+    return await producto.import_from_excel(db=db, file=file)

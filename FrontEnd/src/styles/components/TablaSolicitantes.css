@@ -98,8 +98,25 @@
     font-size: 0.875rem;
 }
 
+.pagination-top-controls {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.pagination-bottom {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.items-per-page {
+    display: flex;
+    align-items: center;
+}
+
 .items-per-page select {
-    min-width: 70px;
+    margin: 0 0.5rem;
 }
 
 /* Responsive adjustments */

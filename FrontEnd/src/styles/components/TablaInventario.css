@@ -37,6 +37,7 @@
   font-size: 24px;
 }
 
+
 /* Estilo especial para el botón de agregar con laptop */
 .btn-outline-success {
   position: relative;
@@ -54,6 +55,31 @@
 .table-section {
   margin-top: 20px;
   overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-top-controls {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.pagination-bottom {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.items-per-page {
+  display: flex;
+  align-items: center;
+}
+
+.items-per-page select {
+  margin: 0 0.5rem;
 }
 
 .table {

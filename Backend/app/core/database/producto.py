@@ -15,8 +15,9 @@ class Producto(Base):
     ESTADO = Column(String(20), nullable=False)
     OBSERVACIONES = Column(Text)
 
-    # Relationship
+    # Relationships
     tipo_producto = relationship("TipoProducto", back_populates="productos")
+    productos_solicitud = relationship("ProductoSolicitud", back_populates="producto")
 
     def __repr__(self):
         return f"<Producto(id={self.IDPRODUCTO}, codigo='{self.CODIGO_INTERNO}', nombre='{self.NOMBRE}')>"

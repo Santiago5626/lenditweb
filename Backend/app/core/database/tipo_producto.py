@@ -6,7 +6,7 @@ class TipoProducto(Base):
     __tablename__ = "GS_TIPO_PRODUCTO"
     
     IDTIPOPRODUCTO = Column(Integer, primary_key=True)
-    NOMBRE_TIPO_PRODUCTO = Column(String(60), nullable=False)
+    NOMBRE_TIPO_PRODUCTO = Column(String(60), nullable=False, unique=True)
 
     # Relationship with Producto
     productos = relationship("Producto", back_populates="tipo_producto")

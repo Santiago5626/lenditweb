@@ -1,0 +1,144 @@
+.circulacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.circulacion-header h1 {
+  margin: 0;
+  color: #495057;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.circulacion-header .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.circulacion-header .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 48, 77, 0.3);
+}
+
+.circulacion-header .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.prestamo-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.prestamo-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.selectores-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.selector-solicitantes-wrapper {
+  grid-column: 1 / 2;
+}
+
+.selector-productos-wrapper {
+  grid-column: 2 / 3;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-container .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+}
+
+.loading-container p {
+  color: #6c757d;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.alert {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .selectores-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .selector-solicitantes-wrapper,
+  .selector-productos-wrapper {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .circulacion-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .circulacion-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .circulacion-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .prestamo-container {
+    padding: 15px;
+  }
+
+  .prestamo-grid {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .circulacion-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .prestamo-container {
+    padding: 10px;
+  }
+}

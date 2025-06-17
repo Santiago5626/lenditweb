@@ -1,4 +1,5 @@
 import React from "react";
+import "../styles/global-inputs.css";
 
 const PaginationControls = ({
     currentPage = 1,
@@ -39,7 +40,7 @@ const PaginationControls = ({
                         <small>Mostrar:</small>
                     </label>
                     <select
-                        className="form-select form-select-sm d-inline-block w-auto"
+                        className="select-standard select-compact d-inline-block w-auto"
                         value={itemsPerPage}
                         onChange={(e) => {
                             const value = Number(e.target.value);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SelectorSolicitantes from './SelectorSolicitantes';
 import SelectorProductos from './SelectorProductos';
-import CarritoPrestamos from './CarritoPrestamos';
+import SelectedItemsChips from './SelectedItemsChips';
 import AlertMessage from './AlertMessage';
 import { crearSolicitud, agregarProductoASolicitud, crearPrestamo } from '../api/peticiones';
 
@@ -14,7 +14,7 @@ const PrestamoWorkflow = ({
 }) => {
     const [solicitanteSeleccionado, setSolicitanteSeleccionado] = useState(null);
     const [productosSeleccionados, setProductosSeleccionados] = useState([]);
-    const [fechaLimite, setFechaLimite] = useState('');
+    const [fechaLimite, setFechaLimite] = useState(new Date().toISOString().split('T')[0]);
     const [loading, setLoading] = useState(false);
 
     const handleAddToCart = (producto) => {
@@ -31,7 +31,7 @@ const PrestamoWorkflow = ({
 
     const handleClearCart = () => {
         setProductosSeleccionados([]);
-        setFechaLimite('');
+        setFechaLimite(new Date().toISOString().split('T')[0]);
     };
 
     const handleConfirmPrestamos = async () => {
@@ -85,6 +85,17 @@ const PrestamoWorkflow = ({
     return (
         <div className="prestamo-container">
             <div className="prestamo-grid">
+                <SelectedItemsChips 
+                    solicitanteSeleccionado={solicitanteSeleccionado}
+                    productosSeleccionados={productosSeleccionados}
+                    fechaLimite={fechaLimite}
+                    onFechaLimiteChange={setFechaLimite}
+                    onConfirm={handleConfirmPrestamos}
+                    onClear={handleClearCart}
+                    onRemoveSolicitante={() => setSolicitanteSeleccionado(null)}
+                    onRemoveProduct={handleRemoveFromCart}
+                    loading={loading}
+                />
                 <div className="selectores-container">
                     <div className="selector-solicitantes-wrapper">
                         <SelectorSolicitantes
@@ -98,19 +109,11 @@ const PrestamoWorkflow = ({
                             productos={productos}
                             tiposProducto={tiposProducto}
                             onAddToCart={handleAddToCart}
+                            selectedProducts={productosSeleccionados}
+                            onRemoveProduct={handleRemoveFromCart}
                         />
                     </div>
                 </div>
-                <CarritoPrestamos
-                    items={productosSeleccionados}
-                    solicitanteSeleccionado={solicitanteSeleccionado}
-                    onRemoveItem={handleRemoveFromCart}
-                    onClear={handleClearCart}
-                    onConfirm={handleConfirmPrestamos}
-                    fechaLimite={fechaLimite}
-                    onFechaLimiteChange={setFechaLimite}
-                    loading={loading}
-                />
             </div>
         </div>
     );

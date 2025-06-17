@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../styles/global-inputs.css';
 
 const ProlongarPrestamoModal = ({ show, onHide, onConfirm, esAprendiz }) => {
     const [dias, setDias] = useState(esAprendiz ? 1 : 7);
@@ -36,7 +37,7 @@ const ProlongarPrestamoModal = ({ show, onHide, onConfirm, esAprendiz }) => {
                                         </div>
                                         <input
                                             type="number"
-                                            className="form-control"
+                                            className="input-standard"
                                             id="dias"
                                             value={1}
                                             disabled
@@ -45,7 +46,7 @@ const ProlongarPrestamoModal = ({ show, onHide, onConfirm, esAprendiz }) => {
                                 ) : (
                                     <input
                                         type="number"
-                                        className="form-control"
+                                        className="input-standard"
                                         id="dias"
                                         value={dias}
                                         onChange={(e) => setDias(parseInt(e.target.value) || 1)}

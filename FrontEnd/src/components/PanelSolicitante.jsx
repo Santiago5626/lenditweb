@@ -5,6 +5,7 @@ import EditarModal from "./EditarModal";
 import ImportarSolicitantesModal from "./ImportarSolicitantesModal";
 import TablaSolicitantesTableSimple from "./TablaSolicitantesTableSimple";
 import "../styles/components/TablaSolicitantes.css";
+import "../styles/global-inputs.css";
 
 const PanelSolicitante = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -114,7 +115,7 @@ const PanelSolicitante = () => {
         // Primero filtramos
         const filtrados = usuarios.filter(user => {
             const matchId = user.identificacion?.toLowerCase().includes(filtroId.toLowerCase()) ?? true;
-            const matchFicha = filtroFicha === "" || 
+            const matchFicha = filtroFicha === "" ||
                 (user.rol === 'aprendiz' && user.ficha && user.ficha.toString().toLowerCase().includes(filtroFicha.toLowerCase()));
             return matchId && matchFicha;
         });
@@ -185,14 +186,14 @@ const PanelSolicitante = () => {
                 <div className="filters">
                     <input
                         type="text"
-                        className="form-control"
+                        className="input-standard"
                         placeholder="Filtrar por Identificación"
                         value={filtroId}
                         onChange={(e) => handleFiltroIdChange(e.target.value)}
                     />
                     <input
                         type="text"
-                        className="form-control"
+                        className="input-standard"
                         placeholder="Filtrar por Ficha"
                         value={filtroFicha}
                         onChange={(e) => handleFiltroFichaChange(e.target.value)}

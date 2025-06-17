@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/components/SelectorSolicitantes.css';
+import '../styles/global-inputs.css';
 
 const SelectorSolicitantes = ({ solicitantes, onSelectSolicitante, solicitanteSeleccionado }) => {
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
@@ -37,7 +38,7 @@ const SelectorSolicitantes = ({ solicitantes, onSelectSolicitante, solicitanteSe
             placeholder="Buscar por nombre, identificación, correo o programa..."
             value={filtroBusqueda}
             onChange={(e) => setFiltroBusqueda(e.target.value)}
-            className="form-control"
+            className="input-standard"
           />
         </div>
       </div>
@@ -58,6 +59,9 @@ const SelectorSolicitantes = ({ solicitantes, onSelectSolicitante, solicitanteSe
                 <p className="identificacion">{solicitante.identificacion}</p>
                 {solicitante.programa && (
                   <p className="programa">{solicitante.programa}</p>
+                )}
+                {solicitante.rol && solicitante.rol.toLowerCase() !== 'aprendiz' && (
+                  <p className="rol">{solicitante.rol}</p>
                 )}
               </div>
               {solicitanteSeleccionado?.identificacion === solicitante.identificacion && (

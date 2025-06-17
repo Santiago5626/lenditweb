@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/components/TablaPrestamos.css';
+import '../styles/global-inputs.css';
 import ProlongarPrestamoModal from './ProlongarPrestamoModal';
 
 const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProlongar }) => {
   const [prestamoParaProlongar, setPrestamoParaProlongar] = useState(null);
   const [filtroSolicitante, setFiltroSolicitante] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+
   const obtenerNombreSolicitante = (solicitud) => {
     if (!solicitud || !solicitud.IDENTIFICACION) return 'No disponible';
     const solicitante = solicitantes.find(s => s.identificacion === solicitud.IDENTIFICACION);
@@ -15,21 +17,28 @@ const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProl
     return 'No encontrado';
   };
 
-  // Filtrar préstamos basado en los filtros
+  // Filtrar y ordenar préstamos basado en los filtros
   const prestamosFiltrados = useMemo(() => {
-    return prestamos.filter(prestamo => {
-      const solicitud = prestamo.solicitud || {};
-      const nombreSolicitante = obtenerNombreSolicitante(solicitud).toLowerCase();
-      const estado = solicitud.ESTADO?.toLowerCase() || '';
+    return prestamos
+      .filter(prestamo => {
+        const solicitud = prestamo.solicitud || {};
+        const nombreSolicitante = obtenerNombreSolicitante(solicitud).toLowerCase();
+        const estado = solicitud.ESTADO?.toLowerCase() || '';
 
-      const cumpleFiltroSolicitante = !filtroSolicitante ||
-        nombreSolicitante.includes(filtroSolicitante.toLowerCase()) ||
-        solicitud.IDENTIFICACION?.includes(filtroSolicitante);
+        const cumpleFiltroSolicitante = !filtroSolicitante ||
+          nombreSolicitante.includes(filtroSolicitante.toLowerCase()) ||
+          solicitud.IDENTIFICACION?.includes(filtroSolicitante);
 
-      const cumpleFiltroEstado = !filtroEstado || estado === filtroEstado.toLowerCase();
+        const cumpleFiltroEstado = !filtroEstado || estado === filtroEstado.toLowerCase();
 
-      return cumpleFiltroSolicitante && cumpleFiltroEstado;
-    });
+        return cumpleFiltroSolicitante && cumpleFiltroEstado;
+      })
+      .sort((a, b) => {
+        // Ordenar por fecha de registro descendente (más reciente primero)
+        const fechaA = new Date(a.FECHA_REGISTRO);
+        const fechaB = new Date(b.FECHA_REGISTRO);
+        return fechaB - fechaA;
+      });
   }, [prestamos, filtroSolicitante, filtroEstado, solicitantes]);
 
   // Obtener estados únicos para el filtro
@@ -41,21 +50,37 @@ const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProl
   const obtenerProductosSolicitud = (solicitud) => {
     if (!solicitud || !solicitud.productos_solicitud) return [];
     return solicitud.productos_solicitud.map(ps => {
+      // Usar los datos del producto que ahora vienen del backend
+      if (ps.NOMBRE && ps.CODIGO_INTERNO) {
+        return `${ps.NOMBRE} (${ps.CODIGO_INTERNO})`;
+      }
+      // Fallback al método anterior si no están disponibles los nuevos campos
       const producto = productos.find(p => p.IDPRODUCTO === ps.PRODUCTO_ID);
       return producto ? `${producto.NOMBRE} (${producto.CODIGO_INTERNO})` : 'Producto no encontrado';
     });
   };
 
   const formatearFecha = (fecha) => {
-    const fechaPrestamo = new Date(fecha);
-    const hoy = new Date();
+    // Si la fecha viene como string (formato YYYY-MM-DD), la parseamos correctamente
+    const fechaStr = typeof fecha === 'string' ? fecha : fecha.toISOString().split('T')[0];
+    const fechaPrestamo = new Date(fechaStr + 'T00:00:00');
 
-    // Comparar solo las fechas (sin hora)
-    const fechaPrestamoSolo = new Date(fechaPrestamo.getFullYear(), fechaPrestamo.getMonth(), fechaPrestamo.getDate());
+    const hoy = new Date();
     const hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
 
-    if (fechaPrestamoSolo.getTime() === hoySolo.getTime()) {
+    // Calcular mañana
+    const manana = new Date(hoySolo);
+    manana.setDate(manana.getDate() + 1);
+
+    // Comparar usando el tiempo en milisegundos
+    const fechaPrestamoTime = fechaPrestamo.getTime();
+    const hoyTime = hoySolo.getTime();
+    const mananaTime = manana.getTime();
+
+    if (fechaPrestamoTime === hoyTime) {
       return 'Hoy';
+    } else if (fechaPrestamoTime === mananaTime) {
+      return 'Mañana';
     }
 
     return fechaPrestamo.toLocaleDateString('es-ES', {
@@ -94,7 +119,7 @@ const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProl
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="input-standard"
                 placeholder="Buscar por solicitante o identificación..."
                 value={filtroSolicitante}
                 onChange={(e) => setFiltroSolicitante(e.target.value)}
@@ -103,7 +128,7 @@ const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProl
           </div>
           <div className="col-md-4">
             <select
-              className="form-select"
+              className="select-standard"
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value)}
             >
@@ -117,14 +142,13 @@ const TablaPrestamos = ({ prestamos, solicitantes, productos, onDevolver, onProl
           </div>
           <div className="col-md-2">
             <button
-              className="btn btn-outline-secondary w-100"
+              className="btn-clear"
               onClick={() => {
                 setFiltroSolicitante('');
                 setFiltroEstado('');
               }}
             >
-              <i className="material-symbols-outlined">clear</i>
-              Limpiar
+              Limpiar Todo
             </button>
           </div>
         </div>

@@ -1,5 +1,59 @@
 const API_BASE_URL = "http://localhost:8000";
 
+// Tiempo de inactividad antes de cerrar sesión (en minutos)
+const INACTIVITY_TIMEOUT = 30;
+let inactivityTimer;
+let lastActivity = Date.now();
+
+// Función para reiniciar el temporizador de inactividad
+function resetInactivityTimer() {
+  lastActivity = Date.now();
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT * 60 * 1000);
+}
+
+// Función para actualizar el token si hay actividad reciente
+async function refreshTokenIfNeeded() {
+  const token = getToken();
+  if (!token) return false;
+
+  const timeSinceLastActivity = Date.now() - lastActivity;
+  // Si ha habido actividad en los últimos 5 minutos, refrescar el token
+  if (timeSinceLastActivity < 5 * 60 * 1000) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/usuario/refresh-token`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          resetInactivityTimer();
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error("Error al refrescar el token:", error);
+    }
+  }
+  return false;
+}
+
+// Configurar listeners para actividad del usuario
+function setupActivityListeners() {
+  const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+  events.forEach(event => {
+    document.addEventListener(event, () => {
+      resetInactivityTimer();
+      refreshTokenIfNeeded();
+    });
+  });
+}
+
 export async function login(nombre, password) {
   try {
     const response = await fetch(`${API_BASE_URL}/usuario/login`, {
@@ -23,6 +77,10 @@ export async function login(nombre, password) {
     if (data.success) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Configurar listeners de actividad y temporizador
+      setupActivityListeners();
+      resetInactivityTimer();
     }
 
     return data;
@@ -33,9 +91,14 @@ export async function login(nombre, password) {
 }
 
 export function logout() {
+  clearTimeout(inactivityTimer);
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  window.location.href = "/login";
+
+  // Verificar si estamos en la página de login antes de redirigir
+  if (window.location.pathname !== "/" && window.location.pathname !== "/login") {
+    window.location.href = "/";
+  }
 }
 
 export function isAuthenticated() {
@@ -75,6 +138,42 @@ export async function verifyToken() {
     return true;
   } catch (error) {
     console.error("Error al verificar el token:", error);
+    return false;
+  }
+}
+
+// Función para inicializar el sistema de refresh token al cargar la aplicación
+export function initializeAuth() {
+  if (isAuthenticated()) {
+    setupActivityListeners();
+    resetInactivityTimer();
+  }
+}
+
+// Función para refrescar manualmente el token
+export async function refreshToken() {
+  const token = getToken();
+  if (!token) return false;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuario/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        resetInactivityTimer();
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error("Error al refrescar el token:", error);
     return false;
   }
 }

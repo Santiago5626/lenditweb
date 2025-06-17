@@ -325,7 +325,7 @@ async def registrar_solicitante(
 def obtener_solicitantes(token: str = Depends(verify_jwt_token)):
     db = SessionLocal()
     try:
-        solicitantes = db.query(Solicitante).all()
+        solicitantes = db.query(Solicitante).order_by(Solicitante.IDENTIFICACION.desc()).all()
         if not solicitantes:
             return []
             

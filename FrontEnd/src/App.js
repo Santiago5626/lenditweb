@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/login';
 import Inicio from './pages/inicio';
@@ -6,9 +6,15 @@ import Inventario from './pages/Inventario';
 import Circulacion from './pages/Circulacion';
 import Reportes from './pages/Reportes';
 import ProtectedRoute from './components/ProtectedRoute';
+import { initializeAuth } from './api/auth';
 import './styles/App.css';
 
 function App() {
+  useEffect(() => {
+    // Inicializar el sistema de autenticación al cargar la aplicación
+    initializeAuth();
+  }, []);
+
   return (
     <Router>
       <Routes>

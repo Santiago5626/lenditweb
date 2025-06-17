@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { crearPrestamo, fetchSolicitantes, fetchProductos } from '../api/peticiones';
 import '../styles/components/RegistrarModal.css';
+import '../styles/global-inputs.css';
 
 const RegistrarPrestamoModal = ({ isOpen, onClose, onPrestamoCreado }) => {
     const [formData, setFormData] = useState({
@@ -75,6 +76,7 @@ const RegistrarPrestamoModal = ({ isOpen, onClose, onPrestamoCreado }) => {
                         <select
                             id="IDENTIFICACION_SOLICITANTE"
                             name="IDENTIFICACION_SOLICITANTE"
+                            className="select-standard"
                             value={formData.IDENTIFICACION_SOLICITANTE}
                             onChange={handleChange}
                             required
@@ -93,6 +95,7 @@ const RegistrarPrestamoModal = ({ isOpen, onClose, onPrestamoCreado }) => {
                         <select
                             id="IDPRODUCTO"
                             name="IDPRODUCTO"
+                            className="select-standard"
                             value={formData.IDPRODUCTO}
                             onChange={handleChange}
                             required
@@ -112,6 +115,7 @@ const RegistrarPrestamoModal = ({ isOpen, onClose, onPrestamoCreado }) => {
                             type="date"
                             id="FECHA_LIMITE"
                             name="FECHA_LIMITE"
+                            className="input-standard"
                             value={formData.FECHA_LIMITE}
                             onChange={handleChange}
                             required

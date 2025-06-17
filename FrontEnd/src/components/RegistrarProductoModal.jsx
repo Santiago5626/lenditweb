@@ -99,7 +99,7 @@ const RegistrarProductoModal = ({ show, onClose, onRegister }) => {
           </div>
 
           {/* Solo mostrar campos adicionales para equipo de cómputo */}
-          {tiposProducto.find(t => t.id === parseInt(formData.IDTIPOPRODUCTO))?.nombre === "equipo de cómputo" && (
+          {tiposProducto.find(t => t.IDTIPOPRODUCTO === parseInt(formData.IDTIPOPRODUCTO))?.NOMBRE_TIPO_PRODUCTO === "equipo de cómputo" && (
             <>
               <div className="form-group">
                 <label htmlFor="PLACA_SENA">PLACA SENA</label>

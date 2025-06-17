@@ -1,3 +1,5 @@
+import apiClient from './axiosConfig';
+
 const API_BASE_URL = "http://localhost:8000";
 
 // Función auxiliar para obtener el token
@@ -12,6 +14,29 @@ const getAuthHeaders = (isMultipart = false) => {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : ''
   };
+};
+
+// Función auxiliar para manejar errores
+const handleError = (error) => {
+  console.error("Error detallado:", {
+    message: error.message,
+    stack: error.stack,
+    name: error.name
+  });
+  
+  // Si es un error de red o el servidor no responde
+  if (!error.response) {
+    throw new Error('Error de conexión con el servidor');
+  }
+
+  // Si es un error de autenticación, el interceptor ya se encarga de redirigir
+  if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    throw new Error('Sesión expirada o inválida');
+  }
+
+  // Para otros errores, usar el mensaje del servidor o uno genérico
+  const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Error en la operación';
+  throw new Error(errorMessage);
 };
 
 export async function importarSolicitantes(file, signal = null) {
@@ -134,24 +159,7 @@ export async function importarSolicitantes(file, signal = null) {
 export async function fetchSolicitantes() {
   try {
     console.log('Intentando obtener solicitantes...');
-    const response = await fetch(`${API_BASE_URL}/solicitantes/obtener`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-      credentials: 'include'
-    });
-
-    console.log('Respuesta del servidor:', response.status);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Si no está autorizado, redirigir al login
-        window.location.href = '/login';
-        throw new Error('Sesión expirada o inválida');
-      }
-      const errorData = await response.json();
-      throw new Error(errorData.detail || "Error al obtener los datos");
-    }
-
+    const response = await apiClient.get('/solicitantes/obtener');
     const data = await response.json();
     console.log('Datos recibidos:', data);
 
@@ -165,117 +173,45 @@ export async function fetchSolicitantes() {
 
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error detallado:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    throw error;
+    handleError(error);
   }
 }
 
 export async function agregar(solicitanteData) {
   try {
     console.log('Datos a enviar:', solicitanteData);
-    const response = await fetch(
-      `${API_BASE_URL}/solicitantes/registrar`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(solicitanteData),
-        credentials: 'include'
-      }
-    );
-
+    const response = await apiClient.post('/solicitantes/registrar', solicitanteData);
     const data = await response.json();
     console.log('Respuesta del servidor:', data);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = '/login';
-        throw new Error('Sesión expirada o inválida');
-      }
-      throw new Error(data.detail || "Error al agregar solicitante");
-    }
-
     return data;
   } catch (error) {
-    console.error("Error detallado:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    throw error;
+    handleError(error);
   }
 }
 
 export async function actualizar(solicitanteData) {
   try {
     console.log('Datos a actualizar:', solicitanteData);
-    const response = await fetch(
-      `${API_BASE_URL}/solicitantes/actualizar`,
-      {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(solicitanteData),
-        credentials: 'include'
-      }
-    );
-
+    const response = await apiClient.put('/solicitantes/actualizar', solicitanteData);
     const data = await response.json();
     console.log('Respuesta del servidor:', data);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = '/login';
-        throw new Error('Sesión expirada o inválida');
-      }
-      throw new Error(data.detail || "Error al actualizar solicitante");
-    }
-
     return data;
   } catch (error) {
-    console.error("Error detallado:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    throw error;
+    handleError(error);
   }
 }
 
 export async function eliminar(identificacion) {
   try {
     console.log('Intentando eliminar solicitante:', identificacion);
-    const response = await fetch(
-      `${API_BASE_URL}/solicitantes/eliminar`,
-      {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ identificacion }),
-        credentials: 'include'
-      }
-    );
-
+    const response = await apiClient.delete('/solicitantes/eliminar', { 
+      body: JSON.stringify({ identificacion }) 
+    });
     const data = await response.json();
     console.log('Respuesta del servidor:', data);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = '/login';
-        throw new Error('Sesión expirada o inválida');
-      }
-      throw new Error(data.detail || "Error al eliminar solicitante");
-    }
-
     return data;
   } catch (error) {
-    console.error("Error detallado:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    throw error;
+    handleError(error);
   }
 }
 

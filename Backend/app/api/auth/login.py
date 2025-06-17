@@ -1,7 +1,7 @@
-
 # routers/login.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.schemas.usuario_modelo import Login, Usuario as UsuarioModel
 from app.core.database.usuario import Usuario
@@ -152,19 +152,9 @@ async def registrar_usuario(user: UsuarioModel, db: Session = Depends(get_db)):
         )
 
 @router.get("/verify-token")
-async def verify_token(authorization: str = Depends(lambda: None)):
-    from fastapi import Request
-    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-    from fastapi import Security
-
-    security = HTTPBearer()
-
-    async def get_token(credentials: HTTPAuthorizationCredentials = Security(security)):
-        return credentials.credentials
-
-    token = await get_token()
-
+async def verify_token(credentials: HTTPAuthorizationCredentials = Security(HTTPBearer())):
     try:
+        token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return JSONResponse(
             status_code=200,
@@ -190,16 +180,75 @@ async def verify_token(authorization: str = Depends(lambda: None)):
             }
         )
 
-from fastapi import Security, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+@router.post("/refresh-token")
+async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(HTTPBearer()), db: Session = Depends(get_db)):
+    try:
+        token = credentials.credentials
+        
+        # Decodificar el token actual (incluso si está expirado)
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            # Si el token está expirado, intentamos decodificarlo sin verificar la expiración
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
+        
+        user_id = payload.get("user_id")
+        nombre = payload.get("nombre")
+        
+        if not user_id or not nombre:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": "Token inválido - datos de usuario faltantes",
+                    "success": False
+                }
+            )
+        
+        # Verificar que el usuario aún existe en la base de datos
+        existing_user = db.query(Usuario).filter(Usuario.IDUSUARIO == user_id).first()
+        if not existing_user:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": "Usuario no encontrado",
+                    "success": False
+                }
+            )
+        
+        # Crear un nuevo token
+        new_token = create_jwt_token(user_id, nombre)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "detail": "Token refrescado exitosamente",
+                "success": True,
+                "token": new_token
+            }
+        )
+        
+    except jwt.InvalidTokenError:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": "Token inválido",
+                "success": False
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": f"Error al refrescar token: {str(e)}",
+                "success": False
+            }
+        )
 
-security = HTTPBearer()
-
-def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Security(security)):
+def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Security(HTTPBearer())):
     try:
         if not credentials:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=401,
                 detail="No se encontraron credenciales de autenticación",
                 headers={"WWW-Authenticate": "Bearer"},
             )
@@ -211,19 +260,19 @@ def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Security(securi
             return payload
         except jwt.ExpiredSignatureError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=401,
                 detail="Token expirado",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         except jwt.InvalidTokenError as e:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=401,
                 detail=f"Token inválido: {str(e)}",
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail=f"Error de autenticación: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )

@@ -126,6 +126,15 @@
   font-style: italic;
 }
 
+.solicitante-info .rol {
+  color: #28a745;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 2px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .solicitante-info .ficha {
   color: #e83e8c;
   font-weight: 500;

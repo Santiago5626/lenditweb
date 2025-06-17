@@ -5,6 +5,7 @@ import EditarProductoModal from "./EditarProductoModal";
 import ImportarProductosModal from "./ImportarProductosModal";
 import PaginationControls from "./PaginationControls";
 import "../styles/components/TablaInventario.css";
+import "../styles/global-inputs.css";
 
 const TablaInventario = () => {
   const [productos, setProductos] = useState([]);
@@ -16,6 +17,7 @@ const TablaInventario = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filtroCodigo, setFiltroCodigo] = useState("");
+  const [filtroSerial, setFiltroSerial] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -105,11 +107,14 @@ const TablaInventario = () => {
       const serial = product.SERIAL || '';
       const idTipo = product.IDTIPOPRODUCTO;
 
-      const matchCodigo = codigoInterno.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
-        placaSena.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
-        serial.toLowerCase().includes(filtroCodigo.toLowerCase());
+      const matchCodigo = filtroCodigo === '' ||
+        codigoInterno.toLowerCase().includes(filtroCodigo.toLowerCase()) ||
+        placaSena.toLowerCase().includes(filtroCodigo.toLowerCase());
+      const matchSerial = filtroSerial === '' ||
+        serial.toLowerCase().includes(filtroSerial.toLowerCase());
       const matchTipo = filtroTipo === "" || idTipo.toString() === filtroTipo;
-      return matchCodigo && matchTipo;
+
+      return matchCodigo && matchSerial && matchTipo;
     });
   };
 
@@ -152,16 +157,26 @@ const TablaInventario = () => {
         <div className="filters">
           <input
             type="text"
-            className="form-control"
-            placeholder="Filtrar por Código/Serial"
+            className="input-standard"
+            placeholder="Filtrar por Código/Placa"
             value={filtroCodigo}
             onChange={(e) => {
               setFiltroCodigo(e.target.value);
               setCurrentPage(1);
             }}
           />
+          <input
+            type="text"
+            className="input-standard"
+            placeholder="Filtrar por Serial"
+            value={filtroSerial}
+            onChange={(e) => {
+              setFiltroSerial(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
           <select
-            className="form-control"
+            className="select-standard"
             value={filtroTipo}
             onChange={(e) => {
               setFiltroTipo(e.target.value);
@@ -229,7 +244,7 @@ const TablaInventario = () => {
                     <small>Mostrar:</small>
                   </label>
                   <select
-                    className="form-select form-select-sm d-inline-block w-auto"
+                    className="select-standard select-compact d-inline-block w-auto"
                     value={itemsPerPage}
                     onChange={(e) => {
                       const value = Number(e.target.value);

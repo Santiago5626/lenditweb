@@ -167,6 +167,25 @@
   background-color: #004b76;
 }
 
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.producto-card.selected {
+  border: 2px solid #28a745;
+  background-color: #f8fff9;
+}
+
+.producto-card.selected:hover {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;

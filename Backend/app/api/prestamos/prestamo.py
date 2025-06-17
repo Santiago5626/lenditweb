@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.core.database.prestamo import Prestamo
 from app.core.database.db import SessionLocal
-from app.api.prestamos.prestamo_validacion import validar_prestamo, PrestamoValidacionError
+from app.api.prestamos.prestamo_validacion import validar_prestamo, validar_productos_solicitud, PrestamoValidacionError
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
@@ -22,8 +22,9 @@ async def obtenerPrestamos(db: Session = Depends(get_db)):
     try:
         from app.core.database.solicitud import Solicitud
         from app.core.database.producto_solicitud import ProductoSolicitud
+        from app.core.database.producto import Producto
         
-        prestamos = db.query(Prestamo).all()
+        prestamos = db.query(Prestamo).order_by(Prestamo.IDPRESTAMO.desc()).all()
 
         # Si no hay préstamos, devolver lista vacía en lugar de 404
         if not prestamos:
@@ -36,6 +37,25 @@ async def obtenerPrestamos(db: Session = Depends(get_db)):
                 solicitud = db.query(Solicitud).filter(Solicitud.IDSOLICITUD == prestamo.IDSOLICITUD).first()
                 productos_solicitud = db.query(ProductoSolicitud).filter(ProductoSolicitud.SOLICITUD_ID == prestamo.IDSOLICITUD).all()
                 
+                # Obtener detalles completos de los productos
+                productos_detalle = []
+                for ps in productos_solicitud:
+                    producto = db.query(Producto).filter(Producto.IDPRODUCTO == ps.PRODUCTO_ID).first()
+                    if producto:
+                        productos_detalle.append({
+                            "PRODUCTO_ID": ps.PRODUCTO_ID,
+                            "SOLICITUD_ID": ps.SOLICITUD_ID,
+                            "NOMBRE": producto.NOMBRE,
+                            "CODIGO_INTERNO": producto.CODIGO_INTERNO
+                        })
+                    else:
+                        productos_detalle.append({
+                            "PRODUCTO_ID": ps.PRODUCTO_ID,
+                            "SOLICITUD_ID": ps.SOLICITUD_ID,
+                            "NOMBRE": "Producto no encontrado",
+                            "CODIGO_INTERNO": "N/A"
+                        })
+                
                 prestamo_dict = {
                     "IDPRESTAMO": prestamo.IDPRESTAMO,
                     "IDSOLICITUD": prestamo.IDSOLICITUD,
@@ -47,12 +67,7 @@ async def obtenerPrestamos(db: Session = Depends(get_db)):
                         "IDENTIFICACION": solicitud.IDENTIFICACION if solicitud else None,
                         "FECHA_REGISTRO": solicitud.FECHA_REGISTRO.isoformat() if solicitud and solicitud.FECHA_REGISTRO else None,
                         "ESTADO": solicitud.ESTADO if solicitud else None,
-                        "productos_solicitud": [
-                            {
-                                "PRODUCTO_ID": ps.PRODUCTO_ID,
-                                "SOLICITUD_ID": ps.SOLICITUD_ID
-                            } for ps in productos_solicitud
-                        ]
+                        "productos_solicitud": productos_detalle
                     }
                 }
                 result.append(prestamo_dict)
@@ -80,16 +95,58 @@ class BuscarPrestamo(BaseModel):
 @router.post("/crear")
 async def crear_prestamo(prestamo: PrestamoCreate, db: Session = Depends(get_db)):
     try:
+        from app.core.database.producto_solicitud import ProductoSolicitud
+        from app.core.database.producto import Producto
+        from app.core.database.solicitud import Solicitud
+        
+        # Obtener la solicitud para validaciones
+        solicitud = db.query(Solicitud).filter(Solicitud.IDSOLICITUD == prestamo.IDSOLICITUD).first()
+        if not solicitud:
+            return JSONResponse(status_code=404, content={"detail": "Solicitud no encontrada"})
+        
+        # Obtener los productos de la solicitud
+        productos_solicitud = db.query(ProductoSolicitud).filter(
+            ProductoSolicitud.SOLICITUD_ID == prestamo.IDSOLICITUD
+        ).all()
+        
+        productos_ids = [ps.PRODUCTO_ID for ps in productos_solicitud]
+        
+        # Validar préstamo básico
+        try:
+            fecha_limite = datetime.strptime(prestamo.FECHA_LIMITE, '%Y-%m-%d').date()
+            validar_prestamo(db, solicitud.IDENTIFICACION, fecha_limite)
+        except PrestamoValidacionError as e:
+            return JSONResponse(status_code=400, content={"detail": str(e)})
+        
+        # Validar productos específicos (especialmente para aprendices y equipos de cómputo)
+        try:
+            validar_productos_solicitud(db, solicitud.IDENTIFICACION, productos_ids)
+        except PrestamoValidacionError as e:
+            return JSONResponse(status_code=400, content={"detail": str(e)})
+        
         nuevo_prestamo = Prestamo(
             IDSOLICITUD=prestamo.IDSOLICITUD,
             FECHA_REGISTRO=datetime.strptime(prestamo.FECHA_REGISTRO, '%Y-%m-%d').date(),
-            FECHA_LIMITE=datetime.strptime(prestamo.FECHA_LIMITE, '%Y-%m-%d').date(),
+            FECHA_LIMITE=fecha_limite,
             FECHA_PROLONGACION=None
         )
         
         db.add(nuevo_prestamo)
         db.commit()
         db.refresh(nuevo_prestamo)
+        
+        # Actualizar estado de productos a 'prestado' (backup del trigger)
+        try:
+            for ps in productos_solicitud:
+                producto = db.query(Producto).filter(Producto.IDPRODUCTO == ps.PRODUCTO_ID).first()
+                if producto:
+                    producto.ESTADO = 'Prestado'
+            
+            db.commit()
+        except Exception as update_error:
+            print(f"Error actualizando estado de productos: {update_error}")
+            # No hacer rollback del préstamo por este error
+        
         return nuevo_prestamo
 
     except Exception as e:
@@ -214,6 +271,8 @@ async def devolver_prestamo(id_prestamo: int, db: Session = Depends(get_db)):
     """
     try:
         from app.core.database.solicitud import Solicitud
+        from app.core.database.producto_solicitud import ProductoSolicitud
+        from app.core.database.producto import Producto
         
         # Buscar el préstamo por su ID
         prestamo = db.query(Prestamo).filter(Prestamo.IDPRESTAMO == id_prestamo).first()
@@ -233,6 +292,19 @@ async def devolver_prestamo(id_prestamo: int, db: Session = Depends(get_db)):
         
         # Cambiar el estado a finalizado
         solicitud.ESTADO = 'finalizado'
+        
+        # Actualizar estado de productos a 'disponible' (backup del trigger)
+        try:
+            productos_solicitud = db.query(ProductoSolicitud).filter(
+                ProductoSolicitud.SOLICITUD_ID == prestamo.IDSOLICITUD
+            ).all()
+            
+            for ps in productos_solicitud:
+                producto = db.query(Producto).filter(Producto.IDPRODUCTO == ps.PRODUCTO_ID).first()
+                if producto:
+                    producto.ESTADO = 'Disponible'
+        except Exception as update_error:
+            print(f"Error actualizando estado de productos al devolver: {update_error}")
         
         # Guardar los cambios
         db.commit()

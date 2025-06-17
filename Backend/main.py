@@ -17,6 +17,7 @@ from app.api.prestamos.prestamo import router as funcionesPrestamo
 from app.api.productos.producto_router import router as producto_router
 from app.api.productos.tipo_producto_router import router as tipo_producto_router
 from app.api.solicitudes.solicitud import router as solicitud_router
+from app.api.sanciones.sancion_router import router as sancion_router
 
 # Importar configuración de base de datos
 from app.core.database.db import init_db, get_db
@@ -67,6 +68,7 @@ app.include_router(funcionesPrestamo, prefix="/prestamo", tags=["Préstamos"])
 app.include_router(producto_router, prefix="/productos", tags=["Productos"])
 app.include_router(tipo_producto_router, prefix="/tipos-producto", tags=["Tipos de Producto"])
 app.include_router(solicitud_router, prefix="/solicitudes", tags=["Solicitudes"])
+app.include_router(sancion_router, prefix="/api", tags=["Sanciones"])
 
 @app.get("/")
 async def root():

@@ -9,7 +9,7 @@ import io
 
 def get_productos(db: Session, skip: int = 0, limit: int = 100):
     try:
-        productos = db.query(Producto).offset(skip).limit(limit).all()
+        productos = db.query(Producto).order_by(Producto.IDPRODUCTO.desc()).offset(skip).limit(limit).all()
         # Si no hay productos, devolver lista vacía en lugar de error
         if not productos:
             return []
@@ -240,7 +240,7 @@ async def import_from_excel(db: Session, file: UploadFile):
                 
                 # Validar estado
                 estado = str(row['Estado']).strip() if pd.notna(row['Estado']) else "Disponible"
-                estados_validos = ['Disponible', 'En préstamo', 'En mantenimiento', 'Dado de baja']
+                estados_validos = ['Disponible', 'Prestado', 'Mantenimiento', 'Dado de baja']
                 if estado not in estados_validos:
                     errores_fila.append(f"Estado debe ser uno de: {', '.join(estados_validos)}")
                 

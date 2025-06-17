@@ -55,7 +55,7 @@ def init_mysql_db():
                     PLACA_SENA VARCHAR(50),
                     SERIAL VARCHAR(100),
                     MARCA VARCHAR(60),
-                    ESTADO ENUM('disponible', 'prestado', 'mantenimiento', 'dado de baja') DEFAULT 'disponible',
+                    ESTADO ENUM('Disponible', 'Prestado', 'Mantenimiento', 'Dado de baja') DEFAULT 'Disponible',
                     OBSERVACIONES TEXT,
                     CONSTRAINT FK_TIPO_PRODUCTO FOREIGN KEY (IDTIPOPRODUCTO) REFERENCES GS_TIPO_PRODUCTO(IDTIPOPRODUCTO)
                 );
@@ -108,45 +108,59 @@ def init_mysql_db():
                     DATOS_NUEVOS TEXT,
                     CONSTRAINT FK_USUARIO_LOG FOREIGN KEY (IDUSUARIO) REFERENCES GS_USUARIO(IDUSUARIO)
                 );
+
+                -- 11. Tabla de sanciones
+                CREATE TABLE IF NOT EXISTS GS_SANCION (
+                    IDSANCION INT AUTO_INCREMENT PRIMARY KEY,
+                    IDENTIFICACION VARCHAR(30) NOT NULL,
+                    IDPRESTAMO INT NOT NULL,
+                    FECHA_INICIO DATE NOT NULL,
+                    FECHA_FIN DATE NOT NULL,
+                    DIAS_SANCION INT NOT NULL DEFAULT 3,
+                    MOTIVO VARCHAR(255) NOT NULL DEFAULT 'Entrega tardía de préstamo',
+                    ESTADO ENUM('activa', 'cumplida', 'cancelada') NOT NULL DEFAULT 'activa',
+                    FECHA_REGISTRO DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT FK_SANCION_SOLICITANTE FOREIGN KEY (IDENTIFICACION) REFERENCES GS_SOLICITANTE(IDENTIFICACION),
+                    CONSTRAINT FK_SANCION_PRESTAMO FOREIGN KEY (IDPRESTAMO) REFERENCES HS_PRESTAMO(IDPRESTAMO)
+                );
             """))
 
-            # Create triggers
-            connection.execute(text("""
-                -- Trigger para actualizar estado del producto al crear préstamo
-                DELIMITER //
-                CREATE TRIGGER IF NOT EXISTS after_prestamo_insert
+            # Create triggers - Drop and recreate to ensure they are updated
+            triggers = [
+                # Trigger para actualizar estado del producto al crear préstamo
+                "DROP TRIGGER IF EXISTS after_prestamo_insert",
+                """
+                CREATE TRIGGER after_prestamo_insert
                 AFTER INSERT ON HS_PRESTAMO
                 FOR EACH ROW
                 BEGIN
                     UPDATE GS_PRODUCTO p
                     INNER JOIN GS_PRODUCTO_SOLICITUD ps ON p.IDPRODUCTO = ps.PRODUCTO_ID
                     WHERE ps.SOLICITUD_ID = NEW.IDSOLICITUD
-                    SET p.ESTADO = 'prestado';
-                END //
-                DELIMITER ;
-
-                -- Trigger para actualizar estado del producto al devolver préstamo
-                DELIMITER //
-                CREATE TRIGGER IF NOT EXISTS after_prestamo_devolucion
-                AFTER UPDATE ON HS_PRESTAMO
+                    SET p.ESTADO = 'Prestado';
+                END
+                """,
+                
+                # Trigger para actualizar estado del producto al finalizar solicitud
+                "DROP TRIGGER IF EXISTS after_solicitud_finalizada",
+                """
+                CREATE TRIGGER after_solicitud_finalizada
+                AFTER UPDATE ON GS_SOLICITUD
                 FOR EACH ROW
                 BEGIN
-                    IF NEW.FECHA_DEVOLUCION IS NOT NULL AND OLD.FECHA_DEVOLUCION IS NULL THEN
+                    IF NEW.ESTADO = 'finalizado' AND OLD.ESTADO != 'finalizado' THEN
                         UPDATE GS_PRODUCTO p
                         INNER JOIN GS_PRODUCTO_SOLICITUD ps ON p.IDPRODUCTO = ps.PRODUCTO_ID
                         WHERE ps.SOLICITUD_ID = NEW.IDSOLICITUD
-                        SET p.ESTADO = 'disponible';
-                        
-                        UPDATE GS_SOLICITUD
-                        SET ESTADO = 'finalizado'
-                        WHERE IDSOLICITUD = NEW.IDSOLICITUD;
+                        SET p.ESTADO = 'Disponible';
                     END IF;
-                END //
-                DELIMITER ;
-
-                -- Trigger para validar fechas de préstamo
-                DELIMITER //
-                CREATE TRIGGER IF NOT EXISTS before_prestamo_insert
+                END
+                """,
+                
+                # Trigger para validar fechas de préstamo
+                "DROP TRIGGER IF EXISTS before_prestamo_insert",
+                """
+                CREATE TRIGGER before_prestamo_insert
                 BEFORE INSERT ON HS_PRESTAMO
                 FOR EACH ROW
                 BEGIN
@@ -154,24 +168,83 @@ def init_mysql_db():
                         SIGNAL SQLSTATE '45000'
                         SET MESSAGE_TEXT = 'La fecha límite debe ser posterior a la fecha de registro';
                     END IF;
-                END //
-                DELIMITER ;
-
-                -- Trigger para validar prolongación
-                DELIMITER //
-                CREATE TRIGGER IF NOT EXISTS before_prestamo_update
-                BEFORE UPDATE ON HS_PRESTAMO
+                END
+                """,
+                
+                # Trigger para sancionar préstamos vencidos
+                "DROP TRIGGER IF EXISTS tr_sancionar_prestamo_vencido",
+                """
+                CREATE TRIGGER tr_sancionar_prestamo_vencido
+                AFTER UPDATE ON GS_SOLICITUD
                 FOR EACH ROW
                 BEGIN
-                    IF NEW.FECHA_PROLONGACION IS NOT NULL AND OLD.FECHA_PROLONGACION IS NULL THEN
-                        IF NEW.FECHA_PROLONGACION <= OLD.FECHA_LIMITE THEN
-                            SIGNAL SQLSTATE '45000'
-                            SET MESSAGE_TEXT = 'La fecha de prolongación debe ser posterior a la fecha límite actual';
+                    DECLARE v_identificacion VARCHAR(30);
+                    DECLARE v_fecha_limite DATE;
+                    DECLARE v_idprestamo INT;
+                    DECLARE v_fecha_inicio DATE;
+                    DECLARE v_fecha_fin DATE;
+                    DECLARE v_sancion_existe INT DEFAULT 0;
+                    
+                    -- Solo proceder si la solicitud está siendo finalizada
+                    IF NEW.ESTADO = 'finalizado' AND OLD.ESTADO != 'finalizado' THEN
+                        -- Obtener datos del préstamo asociado
+                        SELECT p.IDPRESTAMO, p.FECHA_LIMITE, NEW.IDENTIFICACION
+                        INTO v_idprestamo, v_fecha_limite, v_identificacion
+                        FROM HS_PRESTAMO p
+                        WHERE p.IDSOLICITUD = NEW.IDSOLICITUD
+                        LIMIT 1;
+                        
+                        -- Verificar si la entrega es tardía (fecha actual > fecha límite)
+                        IF CURDATE() > v_fecha_limite THEN
+                            -- Verificar si ya existe una sanción para este préstamo
+                            SELECT COUNT(*) INTO v_sancion_existe
+                            FROM GS_SANCION
+                            WHERE IDPRESTAMO = v_idprestamo;
+                            
+                            -- Solo crear sanción si no existe una previa
+                            IF v_sancion_existe = 0 THEN
+                                -- Calcular fechas de sanción
+                                SET v_fecha_inicio = CURDATE();
+                                SET v_fecha_fin = DATE_ADD(v_fecha_inicio, INTERVAL 3 DAY);
+                                
+                                -- Insertar la sanción
+                                INSERT INTO GS_SANCION (
+                                    IDENTIFICACION,
+                                    IDPRESTAMO,
+                                    FECHA_INICIO,
+                                    FECHA_FIN,
+                                    DIAS_SANCION,
+                                    MOTIVO,
+                                    ESTADO,
+                                    FECHA_REGISTRO
+                                ) VALUES (
+                                    v_identificacion,
+                                    v_idprestamo,
+                                    v_fecha_inicio,
+                                    v_fecha_fin,
+                                    3,
+                                    'Entrega tardía de préstamo',
+                                    'activa',
+                                    NOW()
+                                );
+                                
+                                -- Actualizar estado del solicitante a 'no apto'
+                                UPDATE GS_SOLICITANTE
+                                SET ESTADO = 'no apto'
+                                WHERE IDENTIFICACION = v_identificacion;
+                            END IF;
                         END IF;
                     END IF;
-                END //
-                DELIMITER ;
-            """))
+                END
+                """
+            ]
+            
+            for trigger_sql in triggers:
+                try:
+                    connection.execute(text(trigger_sql))
+                    print(f"✅ Trigger ejecutado correctamente")
+                except Exception as trigger_error:
+                    print(f"⚠️ Error ejecutando trigger: {trigger_error}")
 
             # Create indexes
             indexes = [
@@ -181,7 +254,12 @@ def init_mysql_db():
                 "CREATE INDEX IF NOT EXISTS idx_estado_solicitud ON GS_SOLICITUD(ESTADO)",
                 "CREATE INDEX IF NOT EXISTS idx_fecha_prestamo ON HS_PRESTAMO(FECHA_REGISTRO)",
                 "CREATE INDEX IF NOT EXISTS idx_fecha_limite ON HS_PRESTAMO(FECHA_LIMITE)",
-                "CREATE INDEX IF NOT EXISTS idx_fecha_prolongacion ON HS_PRESTAMO(FECHA_PROLONGACION)"
+                "CREATE INDEX IF NOT EXISTS idx_fecha_prolongacion ON HS_PRESTAMO(FECHA_PROLONGACION)",
+                "CREATE INDEX IF NOT EXISTS idx_sancion_identificacion ON GS_SANCION(IDENTIFICACION)",
+                "CREATE INDEX IF NOT EXISTS idx_sancion_estado ON GS_SANCION(ESTADO)",
+                "CREATE INDEX IF NOT EXISTS idx_sancion_fecha_inicio ON GS_SANCION(FECHA_INICIO)",
+                "CREATE INDEX IF NOT EXISTS idx_sancion_fecha_fin ON GS_SANCION(FECHA_FIN)",
+                "CREATE INDEX IF NOT EXISTS idx_sancion_prestamo ON GS_SANCION(IDPRESTAMO)"
             ]
             
             for index_sql in indexes:
@@ -203,7 +281,6 @@ def create_default_data():
     """Create default data for the application"""
     try:
         with engine.connect() as connection:
-            # Insert default product types
             default_types = [
                 "Equipo de cómputo",
                 "Cargador", 
